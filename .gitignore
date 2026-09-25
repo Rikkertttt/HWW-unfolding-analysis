@@ -1,0 +1,7 @@
+*.parquet
+*.root
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
+*.pdf
+*.png
