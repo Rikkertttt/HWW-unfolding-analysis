@@ -5,7 +5,7 @@ import awkward as ak
 import numpy as np
 from typing import Optional
 
-from read_data import EventObjects
+from helpers.read_data import EventObjects
 
 def count_events(events: EventObjects) -> int:
     return len(events.event_id)

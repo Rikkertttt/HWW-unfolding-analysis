@@ -1,6 +1,6 @@
 import os
 import time
-import read_data as rd
+import helpers.read_data as rd
 import event_selection_filters as filter
 from collections import defaultdict
 from tqdm import tqdm

@@ -6,10 +6,6 @@ from typing import Optional
 import awkward as ak
 import numpy as np
 
-import awkward as ak
-import matplotlib.pyplot as plt
-import numpy as np
-
 
 def plot_hist(
     data: ak.Array,
