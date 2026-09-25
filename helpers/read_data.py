@@ -11,6 +11,11 @@ ELECTRON_MASS_GEV = 0.000511
 
 
 class EventObjects:
+    """Per-event physics objects for a single file or combined sample.
+
+    All arrays are index-aligned. ``file_id`` is ``None`` until events
+    from multiple files are combined via ``__add__``.
+    """
     def __init__(
         self,
         event_id:  np.ndarray,
@@ -28,6 +33,9 @@ class EventObjects:
         self.file_id   = file_id  # None until combined
 
     def __add__(self, other: "EventObjects") -> "EventObjects":
+        """Concatenate two EventObjects with unique file_id values.
+        Self gets 0 (or keeps existing), other gets max(file_id) + 1.
+        """
         # Determine file_id for self
         if self.file_id is None:
             self_file_id = np.zeros(len(self.event_id), dtype=int)
@@ -53,7 +61,7 @@ class EventObjects:
 
 
 def open_root_file(path: str, show_keys: bool = False, verbose: bool = False):
-    """Open a ROOT file and optionally print its top-level keys."""
+    """Open a ROOT file with uproot, optionally printing its top-level keys."""
     if verbose:
         print(f"Opening {path}")
 
@@ -71,7 +79,7 @@ def make_four_momentum(
     phi: ak.Array,
     mass: ak.Array,
 ) -> ak.Array:
-    """Construct an Awkward Momentum4D array from pt, eta, phi, and mass."""
+    """Construct a Momentum4D Awkward Array from pt, eta, phi, and mass."""
     return ak.zip(
         {
             "pt": pt,
@@ -84,13 +92,8 @@ def make_four_momentum(
 
 
 def load_reco_objects(tree, verbose: bool = False) -> EventObjects:
-    """Load reconstructed objects with charges and b-tags attached.
-
-    Jet fields:
-        pt, eta, phi, mass, btag
-
-    Muon/electron fields:
-        pt, eta, phi, mass, charge
+    """Load reconstructed jets, muons, electrons, and MET from a Delphes TTree.
+    Jets carry a ``btag`` field; leptons carry a ``charge`` field.
     """
 
     branches = [
@@ -168,13 +171,8 @@ def load_reco_objects(tree, verbose: bool = False) -> EventObjects:
 
 
 def load_gen_objects(tree, verbose: bool = False) -> EventObjects:
-    """Load generator-level jets, electrons, and muons.
-
-    Both charge signs are selected:
-        - electron/muon: PDG ID 11/13, charge -1;
-        - positron/antimuon: PDG ID -11/-13, charge +1.
-
-    Assumes that the Delphes tree contains GenJet.BTag.
+    """Load generator-level jets, muons, electrons, and MET from a Delphes TTree.
+    Leptons are extracted from the Particle branch by PID (11/13).
     """
     branches = [
         "GenJet.PT",
@@ -265,7 +263,7 @@ def load_gen_objects(tree, verbose: bool = False) -> EventObjects:
     )
 
 def save_events(events: EventObjects, path: str) -> None:
-    """Save an EventObjects to a parquet file."""
+    """Save an EventObjects to a Parquet file, including ``file_id`` if set."""
     data = {
         "event_id":  events.event_id,
         "jets":      events.jets,
@@ -280,7 +278,9 @@ def save_events(events: EventObjects, path: str) -> None:
 
 
 def load_events(path: str) -> EventObjects:
-    """Load an EventObjects from a parquet file."""
+    """Load an EventObjects from a Parquet file saved by ``save_events``.
+    Restores Momentum4D record types so that vector methods are available.
+    """
     array = ak.from_parquet(path)
 
     def to_momentum4d(arr: ak.Array) -> ak.Array:
@@ -301,10 +301,8 @@ def match_gen_reco(
     gen_events: EventObjects,
     reco_events: EventObjects,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return boolean masks selecting matched (file_id, event_id) pairs.
-
-    Both EventObjects must have file_id set (i.e. be combined across files).
-    Returns (gen_mask, reco_mask) to index into gen_events and reco_events.
+    """Return boolean masks selecting events present in both gen and reco.
+    Matches on (file_id, event_id) pairs. Returns (gen_mask, reco_mask).
     """
     assert gen_events.file_id is not None, "gen_events has no file_id — combine files first"
     assert reco_events.file_id is not None, "reco_events has no file_id — combine files first"
