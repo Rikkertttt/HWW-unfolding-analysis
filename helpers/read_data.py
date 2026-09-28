@@ -185,8 +185,9 @@ def load_gen_objects(tree, verbose: bool = False) -> EventObjects:
         "Particle.Eta",
         "Particle.Phi",
         "Particle.Charge",
-        "GenMissingET.MET",
-        "GenMissingET.Phi",
+        "Particle.Mass",
+        # "GenMissingET.MET",
+        # "GenMissingET.Phi",
     ]
 
     if verbose: print("Loading generator-level objects")
@@ -244,13 +245,22 @@ def load_gen_objects(tree, verbose: bool = False) -> EventObjects:
     )
     if verbose: print("Made Electrons 4-momentum")
 
-    genmet_pt = arrays["GenMissingET.MET"]
-
-    gen_met = make_four_momentum(
-        pt=genmet_pt,
-        eta=ak.zeros_like(genmet_pt),
-        phi=arrays["GenMissingET.Phi"],
-        mass=ak.zeros_like(genmet_pt),
+    # Make the MET the actual neutrinos
+    neutrino_mask = (abs(pid) == 12) | (abs(pid) == 14)
+    nu = make_four_momentum(
+        arrays["Particle.PT"][neutrino_mask],
+        arrays["Particle.Eta"][neutrino_mask],
+        arrays["Particle.Phi"][neutrino_mask],
+        arrays["Particle.Mass"][neutrino_mask],
+    )
+    gen_met = ak.zip(
+        {
+            "px":     ak.sum(nu.px,     axis=1),
+            "py":     ak.sum(nu.py,     axis=1),
+            "pz":     ak.sum(nu.pz,     axis=1),
+            "energy": ak.sum(nu.energy, axis=1),
+        },
+        with_name="Momentum4D",
     )
     if verbose: print("Made MET 4-momentum")
 
