@@ -251,7 +251,7 @@ def load_gen_objects(tree, verbose: bool = False) -> EventObjects:
         arrays["Particle.PT"][neutrino_mask],
         arrays["Particle.Eta"][neutrino_mask],
         arrays["Particle.Phi"][neutrino_mask],
-        arrays["Particle.Mass"][neutrino_mask],
+        ak.zeros_like(arrays["Particle.PT"][neutrino_mask]),
     )
     gen_met = ak.zip(
         {
