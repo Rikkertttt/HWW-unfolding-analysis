@@ -175,7 +175,6 @@ def plot_comparison_hist(
 
     if filename is not None:
         fig.savefig(filename + ".pdf", bbox_inches="tight")
-        fig.savefig(filename + ".png", dpi=200, bbox_inches="tight")
 
     if show:
         plt.show()
