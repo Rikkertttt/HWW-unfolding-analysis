@@ -94,6 +94,7 @@ def plot_comparison_hist(
     bins: int = 50,
     density: bool = False,
     ratio: bool = False,
+    xlim: Optional[tuple[float, float]] = None
 ) -> tuple[Figure, Axes]:
     """Plot a visually clean comparison histogram."""
 
@@ -141,6 +142,7 @@ def plot_comparison_hist(
         title=title,
         xlabel=xlabel,
         ylabel="Normalized entries" if density else ylabel,
+        xlim=xlim
     )
 
     ax_main.grid(axis="y", alpha=0.25, linestyle="--")
@@ -165,7 +167,7 @@ def plot_comparison_hist(
                 linewidth=1.5,
             )
 
-        ax_ratio.set(xlabel=xlabel, ylabel="Ratio", ylim=(0.5, 1.5))
+        ax_ratio.set(xlabel=xlabel, ylabel="Ratio", ylim=(0.5, 1.5), xlim=xlim)
         ax_ratio.grid(axis="y", alpha=0.25, linestyle="--")
         ax_ratio.spines["top"].set_visible(False)
         ax_ratio.spines["right"].set_visible(False)
