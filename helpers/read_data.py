@@ -185,7 +185,6 @@ def load_gen_objects(tree, verbose: bool = False) -> EventObjects:
         "Particle.Eta",
         "Particle.Phi",
         "Particle.Charge",
-        "Particle.Mass",
         # "GenMissingET.MET",
         # "GenMissingET.Phi",
     ]
