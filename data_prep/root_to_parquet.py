@@ -1,4 +1,7 @@
 import os
+import sys
+sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")
+
 import time
 import helpers.read_data as rd
 import event_selection_filters as filter
