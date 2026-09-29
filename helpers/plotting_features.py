@@ -94,7 +94,7 @@ def plot_comparison_hist(
     bins: int = 50,
     density: bool = False,
     ratio: bool = False,
-    xlim: Optional[tuple[float, float]] = None
+    xlim: Optional[tuple[Optional[float], Optional[float]]] = None
 ) -> tuple[Figure, Axes]:
     """Plot a visually clean comparison histogram."""
 
