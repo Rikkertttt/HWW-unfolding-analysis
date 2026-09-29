@@ -327,25 +327,25 @@ def load_multiple_events(DIR: str) -> EventObjects:
     return events
 
 
-def match_gen_reco(
-    gen_events: EventObjects,
-    reco_events: EventObjects,
+def match_events(
+    event_1: EventObjects,
+    event_2: EventObjects,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Return boolean masks selecting events present in both gen and reco.
     Matches on (file_id, event_id) pairs. Returns (gen_mask, reco_mask).
     """
-    assert gen_events.file_id is not None, "gen_events has no file_id — combine files first"
-    assert reco_events.file_id is not None, "reco_events has no file_id — combine files first"
+    assert event_1.file_id is not None, "event_1 has no file_id — combine files first"
+    assert event_2.file_id is not None, "event_2 has no file_id — combine files first"
 
-    gen_keys  = np.stack([gen_events.file_id,  gen_events.event_id],  axis=1)
-    reco_keys = np.stack([reco_events.file_id, reco_events.event_id], axis=1)
+    keys_1 = np.stack([event_1.file_id,  event_1.event_id],  axis=1)
+    keys_2 = np.stack([event_2.file_id, event_2.event_id], axis=1)
 
-    gen_keys_view  = gen_keys.view([("", gen_keys.dtype)] * 2).ravel()
-    reco_keys_view = reco_keys.view([("", reco_keys.dtype)] * 2).ravel()
+    keys_1_view = keys_1.view([("", keys_1.dtype)] * 2).ravel()
+    keys_2_view = keys_2.view([("", keys_2.dtype)] * 2).ravel()
 
-    common = np.intersect1d(gen_keys_view, reco_keys_view)
+    common = np.intersect1d(keys_1_view, keys_2_view)
 
-    gen_mask  = np.isin(gen_keys_view,  common)
-    reco_mask = np.isin(reco_keys_view, common)
+    mask_1 = np.isin(keys_1_view,  common)
+    mask_2 = np.isin(keys_2_view, common)
 
-    return gen_mask, reco_mask
+    return mask_1, mask_2
