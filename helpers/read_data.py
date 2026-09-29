@@ -1,3 +1,4 @@
+import os
 import awkward as ak
 import numpy as np
 import uproot
@@ -305,6 +306,26 @@ def load_events(path: str) -> EventObjects:
         met       = to_momentum4d(array["met"]),
         file_id   = file_id,
     )
+
+def load_multiple_events(DIR: str) -> EventObjects:
+    """ Load multiple EventObjects from Parquet files within DIR.
+    """
+    paths = sorted([f for f in os.listdir(DIR) if f.endswith(".parquet")])
+
+    events: Optional[EventObjects] = None
+
+    for file in paths:
+        loaded = load_events(path=os.path.join(DIR, file))
+        if events is None:
+            events = loaded
+        else:
+            events += loaded
+
+    if events is None:
+        raise ValueError(f"No parquet files found in {DIR}")
+
+    return events
+
 
 def match_gen_reco(
     gen_events: EventObjects,
