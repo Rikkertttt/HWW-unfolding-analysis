@@ -49,12 +49,22 @@ class EventObjects:
         other_file_id = np.full(len(other.event_id), next_id, dtype=int)
 
         return EventObjects(
-            event_id  = np.concatenate([self.event_id,  other.event_id]),
-            jets      = ak.concatenate([self.jets,       other.jets]),
-            muons     = ak.concatenate([self.muons,      other.muons]),
-            electrons = ak.concatenate([self.electrons,  other.electrons]),
-            met       = ak.concatenate([self.met,        other.met]),
-            file_id   = np.concatenate([self_file_id,    other_file_id]),
+            event_id    = np.concatenate([self.event_id,  other.event_id]),
+            jets        = ak.concatenate([self.jets,       other.jets]),
+            muons       = ak.concatenate([self.muons,      other.muons]),
+            electrons   = ak.concatenate([self.electrons,  other.electrons]),
+            met         = ak.concatenate([self.met,        other.met]),
+            file_id     = np.concatenate([self_file_id,    other_file_id]),
+        )
+
+    def __getitem__(self, index):
+        return EventObjects(
+            event_id    =self.event_id[index],
+            jets        =self.jets[index],
+            muons       =self.muons[index],
+            electrons   =self.electrons[index],
+            met         =self.met[index],
+            file_id     =self.file_id[index] if self.file_id is not None else None,
         )
 
     def __len__(self) -> int:
@@ -331,8 +341,8 @@ def match_events(
     event_1: EventObjects,
     event_2: EventObjects,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return boolean masks selecting events present in both gen and reco.
-    Matches on (file_id, event_id) pairs. Returns (gen_mask, reco_mask).
+    """Return boolean masks selecting events present.
+    Matches on (file_id, event_id) pairs. Returns (mask_1, mask_2).
     """
     assert event_1.file_id is not None, "event_1 has no file_id — combine files first"
     assert event_2.file_id is not None, "event_2 has no file_id — combine files first"
