@@ -1,5 +1,7 @@
 import numpy as np
 import tensorflow as tf
+
+import wandb_helpers as wb
 K = tf.keras.backend
 from sklearn.model_selection import train_test_split
 
@@ -24,7 +26,12 @@ def weighted_binary_crossentropy(y_true, y_pred):
 
     return K.mean(t_loss)
 
-def omnifold(theta0,theta_unknown_S,iterations,model,verbose=0):
+def omnifold(theta0,
+             theta_unknown_S, 
+             iterations, 
+             model, 
+             verbose=0, 
+             callbacks_fn=None):
 
     weights = np.empty(shape=(iterations, 2, len(theta0)))
     # shape = (iteration, step, event)
@@ -71,11 +78,13 @@ def omnifold(theta0,theta_unknown_S,iterations,model,verbose=0):
                       optimizer='Adam',
                       metrics=['accuracy'])
 
-        model.fit(X_train_1,
-                  Y_train_1,
+        callbacks = callbacks_fn(i) if callbacks_fn is not None else [[], []]
+
+        model.fit(X_train_1, Y_train_1,
                   epochs=20,
                   batch_size=10000,
                   validation_data=(X_test_1, Y_test_1),
+                  callbacks=callbacks[0],
                   verbose=verbose)
 
         weights_pull = weights_push * reweight(theta0_S,model)
@@ -100,11 +109,12 @@ def omnifold(theta0,theta_unknown_S,iterations,model,verbose=0):
         model.compile(loss=weighted_binary_crossentropy,
                       optimizer='Adam',
                       metrics=['accuracy'])
-        model.fit(X_train_2,
-                  Y_train_2,
+        
+        model.fit(X_train_2, Y_train_2,
                   epochs=20,
                   batch_size=2000,
                   validation_data=(X_test_2, Y_test_2),
+                  callbacks=callbacks[1],
                   verbose=verbose)
 
         weights_push = reweight(theta0_G,model)
