@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras.backend as K
+K = tf.keras.backend
 from sklearn.model_selection import train_test_split
 
 def reweight(events,model,batch_size=10000):
