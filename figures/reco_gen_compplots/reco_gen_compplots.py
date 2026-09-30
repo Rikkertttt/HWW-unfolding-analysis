@@ -9,8 +9,8 @@ import numpy as np
 
 import time
 
-gen_DIR = "/user/rvanrhee/data_rik/hww_parquet/gen/"
-reco_DIR = "/user/rvanrhee/data_rik/hww_parquet/reco/"
+gen_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection_2/gen/"
+reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection_2/reco/"
 gen_files = sorted([f for f in os.listdir(gen_DIR) if f.endswith(".parquet")])
 reco_files = sorted([f for f in os.listdir(reco_DIR) if f.endswith(".parquet")])
 
@@ -47,7 +47,7 @@ gen_higgs  = gen_events.muons[:, 0]  + gen_events.electrons[:, 0]  + gen_events.
 reco_higgs = reco_events.muons[:, 0] + reco_events.electrons[:, 0] + reco_events.met
 
 # --- Matching masks ---
-gen_mask, reco_mask = rd.match_gen_reco(gen_events=gen_events, reco_events=reco_events)
+gen_mask, reco_mask = rd.match_events(gen_events, reco_events)
 
 # ── Jets ──────────────────────────────────────────────────────────────────────
 
@@ -60,6 +60,7 @@ plotting.plot_comparison_hist(
     bins=150,
     density=True,
     ratio=True,
+    xlim=(None, 450),
 )
 plotting.plot_comparison_hist(
     data=[reco_events.jets[:, :2][reco_mask].pt, gen_events.jets[:, :2][gen_mask].pt],
@@ -70,6 +71,7 @@ plotting.plot_comparison_hist(
     bins=150,
     density=True,
     ratio=True,
+    xlim=(None, 450),
 )
 
 plotting.plot_comparison_hist(
@@ -123,6 +125,7 @@ plotting.plot_comparison_hist(
     bins=150,
     density=True,
     ratio=True,
+    xlim=(None, 75)
 )
 plotting.plot_comparison_hist(
     data=[reco_events.jets[:, :2][reco_mask].mass, gen_events.jets[:, :2][gen_mask].mass],
@@ -133,6 +136,7 @@ plotting.plot_comparison_hist(
     bins=150,
     density=True,
     ratio=True,
+    xlim=(None, 75)
 )
 
 # ── Muons ─────────────────────────────────────────────────────────────────────
@@ -146,6 +150,7 @@ plotting.plot_comparison_hist(
     bins=150,
     density=True,
     ratio=True,
+    xlim=(None, 150),
 )
 plotting.plot_comparison_hist(
     data=[reco_events.muons[:, 0][reco_mask].pt, gen_events.muons[:, 0][gen_mask].pt],
@@ -156,6 +161,7 @@ plotting.plot_comparison_hist(
     bins=150,
     density=True,
     ratio=True,
+    xlim=(None, 150),
 )
 
 plotting.plot_comparison_hist(
@@ -187,9 +193,10 @@ plotting.plot_comparison_hist(
     filename="/user/rvanrhee/projects_rik/HWW-unfolding-analysis/figures/reco_gen_compplots/higgs_mass_unmatched",
     title="Higgs proxy mass (unmatched)",
     xlabel="Mass [GeV]",
-    bins=150,
+    bins=300,
     density=True,
     ratio=True,
+    xlim=(0, 500),
 )
 plotting.plot_comparison_hist(
     data=[reco_higgs[reco_mask].mass, gen_higgs[gen_mask].mass],
@@ -197,9 +204,10 @@ plotting.plot_comparison_hist(
     filename="/user/rvanrhee/projects_rik/HWW-unfolding-analysis/figures/reco_gen_compplots/higgs_mass_matched",
     title="Higgs proxy mass (matched)",
     xlabel="Mass [GeV]",
-    bins=150,
+    bins=300,
     density=True,
     ratio=True,
+    xlim=(0, 500),
 )
 
 t3 = time.time()
