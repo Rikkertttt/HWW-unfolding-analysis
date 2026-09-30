@@ -114,7 +114,7 @@ model.summary()
 
 
 # 1. Init run
-wb.init_omnifold_run(iterations=3, 
+wb.init_omnifold_run(iterations=2, 
                      theta0=theta0, 
                      theta_unknown_S=theta_unknown_S,
                      run_name=None)
