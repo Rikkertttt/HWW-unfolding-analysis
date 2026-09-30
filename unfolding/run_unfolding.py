@@ -114,7 +114,10 @@ model.summary()
 
 
 # 1. Init run
-wb.init_omnifold_run(iterations=3, theta0=theta0, theta_unknown_S=theta_unknown_S)
+wb.init_omnifold_run(iterations=3, 
+                     theta0=theta0, 
+                     theta_unknown_S=theta_unknown_S,
+                     run_name=None)
 
 # 2. Define callback factory
 def make_callbacks(iteration):
@@ -124,7 +127,11 @@ def make_callbacks(iteration):
     ]
 
 # 3. Run OmniFold
-weights = omnifold(theta0, theta_unknown_S, iterations=3, model=model, callbacks_fn=make_callbacks)
+weights = omnifold(theta0, theta_unknown_S, 
+                   iterations=3, 
+                   model=model, 
+                   callbacks_fn=make_callbacks,
+                   verbose=True)
 
 # 4. Log final weights
 for i in range(3):

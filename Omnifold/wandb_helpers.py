@@ -8,6 +8,7 @@ def init_omnifold_run(
     theta0: np.ndarray,
     theta_unknown_S: np.ndarray,
     extra_config: Optional[Dict[str, Any]] = None,
+    run_name: Optional[str] = None,
 ) -> None:
     config: Dict[str, Any] = {
         "iterations":  iterations,
@@ -19,28 +20,31 @@ def init_omnifold_run(
         config.update(extra_config)
 
     wandb.init(
-        entity="rikvanrhee-nikhef",
+        entity="rikvanrhee-nikhef-master",
         project="hww-omnifold",
+        name=run_name,
         config=config,
     )
 
 
 class WandbOmniFoldCallback(tf.keras.callbacks.Callback):
-    def __init__(self, iteration: int, step: int) -> None:
+    def __init__(self, iteration: int, step: int, epochs: int = 20) -> None:
         super().__init__()
         self.iteration = iteration
         self.step = step
+        self.epochs = epochs
 
     def on_epoch_end(self, epoch: int, logs: Optional[Mapping[str, Any]] = None) -> None:
         logs = logs or {}
+        global_step = (self.iteration * 2 + (self.step - 1)) * self.epochs + epoch
         wandb.log({
-            f"iter{self.iteration+1}_step{self.step}_loss":     logs.get("loss"),
-            f"iter{self.iteration+1}_step{self.step}_val_loss": logs.get("val_loss"),
-            f"iter{self.iteration+1}_step{self.step}_acc":      logs.get("accuracy"),
-            "iteration": self.iteration + 1,
-            "step":      self.step,
-            "epoch":     epoch,
-        })
+            "loss":          logs.get("loss"),
+            "val_loss":      logs.get("val_loss"),
+            "accuracy":      logs.get("accuracy"),
+            "val_accuracy":  logs.get("val_accuracy"),  # add this
+            "iteration":     self.iteration + 1,
+            "step":          self.step,
+        }, step=global_step)
 
 
 def log_weights(
