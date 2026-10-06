@@ -30,7 +30,7 @@ def init_omnifold_run(
     wandb.define_metric("epoch")
     for i in range(1, iterations + 1):
         for s in (1, 2):
-            wandb.define_metric(f"iter{i}/step{s}/*", step_metric="epoch")
+            wandb.define_metric(f"iter{i}-step{s}/*", step_metric="epoch")
 
     wandb.define_metric("iteration")
     wandb.define_metric("weights/*", step_metric="iteration")
@@ -46,10 +46,10 @@ class WandbOmniFoldCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch: int, logs: Optional[Mapping[str, Any]] = None) -> None:
         logs = logs or {}
         wandb.log({
-            f"iter{self.iteration+1}/step{self.step}/loss":         logs.get("loss"),
-            f"iter{self.iteration+1}/step{self.step}/val_loss":     logs.get("val_loss"),
-            f"iter{self.iteration+1}/step{self.step}/accuracy":     logs.get("accuracy"),
-            f"iter{self.iteration+1}/step{self.step}/val_accuracy": logs.get("val_accuracy"),
+            f"iter{self.iteration+1}-step{self.step}/loss":         logs.get("loss"),
+            f"iter{self.iteration+1}-step{self.step}/val_loss":     logs.get("val_loss"),
+            f"iter{self.iteration+1}-step{self.step}/accuracy":     logs.get("accuracy"),
+            f"iter{self.iteration+1}-step{self.step}/val_accuracy": logs.get("val_accuracy"),
             "epoch": epoch,
         })
 
