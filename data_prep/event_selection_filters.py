@@ -21,6 +21,7 @@ def apply_event_mask(events: EventObjects,
         muons=events.muons[event_mask],
         electrons=events.electrons[event_mask],
         met=events.met[event_mask],
+        file_id=events.file_id[event_mask] if events.file_id is not None else None,
     )
 
 def jet_pt_eta_mask(events: EventObjects, min_pt: float, max_abs_eta: float) -> EventObjects:
@@ -37,6 +38,7 @@ def jet_pt_eta_mask(events: EventObjects, min_pt: float, max_abs_eta: float) -> 
             muons=events.muons,
             electrons=events.electrons,
             met=events.met,
+            file_id=events.file_id,
         )
 
 def order_objects_on_pt(events: EventObjects) -> EventObjects:
