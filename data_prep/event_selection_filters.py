@@ -201,6 +201,39 @@ def lepton_jet_deltaR_mask(events: EventObjects, deltaR_thres: float) -> EventOb
 
     return selected_events
 
+def remove_jets_near_leptons(events: EventObjects, deltaR_thres: float) -> EventObjects:
+    """
+    Remove any jet that is within deltaR_thres of either leading lepton.
+    """
+    leading_leptons = ak.concatenate(
+        [
+            events.muons[:, :1],
+            events.electrons[:, :1],
+        ],
+        axis=1,
+    )
+
+    pairs = ak.cartesian(
+        {"jet": events.jets, "lepton": leading_leptons},
+        axis=1,
+    )
+
+    delta_r = pairs["jet"].deltaR(pairs["lepton"])
+
+    # True for jets that are far enough from ALL leptons
+    jet_mask = ak.all(delta_r > deltaR_thres, axis=1)
+
+    new_events = EventObjects(
+        event_id=events.event_id,
+        jets=events.jets[jet_mask],
+        muons=events.muons,
+        electrons=events.electrons,
+        met=events.met,
+        file_id=events.file_id,
+    )
+
+    return new_events
+
 def has_at_least_two_jets(events: EventObjects) -> EventObjects:
     """
     Keep events containing at least two retained jets.
@@ -344,13 +377,14 @@ def full_preselection(events: EventObjects) -> tuple[EventObjects, dict[str, int
     events = lepton_eta_mask(events, electron_eta=2.5, muon_eta=2.5);    counts["lepton_eta"]   = count_events(events)
     events = leptons_deltaR_mask(events, deltaR=0.1);                    counts["lepton_dR"]    = count_events(events)
     events = lepton_masses_mask(events, mass_cutoff=10);                 counts["lepton_mass"]  = count_events(events)
-    events = lepton_jet_deltaR_mask(events, deltaR_thres=0.4);           counts["lep_jet_dR"]   = count_events(events)
+    # events = lepton_jet_deltaR_mask(events, deltaR_thres=0.4);           counts["lep_jet_dR"]   = count_events(events)
+    events = remove_jets_near_leptons(events, deltaR_thres=0.4);         counts["lep_jet_dR_temp"]  = count_events(events)
     events = has_at_least_two_jets(events);                              counts["2_jets"]       = count_events(events)
     events = remove_btag(events, pt_thres=20, eta_thres=2.5);            counts["btag"]         = count_events(events)
 
     return events, counts
 
-def full_selection_reco(events: EventObjects, counts: Optional[dict[str, int]] = None) -> tuple[EventObjects, dict[str, int]]:
+def full_selection(events: EventObjects, counts: Optional[dict[str, int]] = None) -> tuple[EventObjects, dict[str, int]]:
     """
     Apply VBF topology and dilepton angular selection requirements for reco data.
     """
@@ -358,21 +392,6 @@ def full_selection_reco(events: EventObjects, counts: Optional[dict[str, int]] =
         counts = {}
 
     events = central_jet_veto(events, pt_cutoff = 20);                   counts["CJV"]          = count_events(events)
-    events = outside_lepton_veto(events);                                counts["OLV"]          = count_events(events)
-    events = jets_mass_mask(events, mass_cutoff=450);                    counts["jets_mass"]    = count_events(events)
-    events = jet_rapidity_mask(events, rapidity_diff_cutoff=2.1);        counts["jet_rapidity"] = count_events(events)
-    events = lepton_phi_mask(events, delta_phi_cutoff=1.4);              counts["lepton_phi"]   = count_events(events)
-
-    return events, counts
-
-def full_selection_gen(events: EventObjects, counts: Optional[dict[str, int]] = None) -> tuple[EventObjects, dict[str, int]]:
-    """
-    Apply VBF topology and dilepton angular selection requirements for gen data.
-    CJV is omitted as this thows away too many events for gen data.
-    """
-    if counts is None:
-        counts = {}
-
     events = outside_lepton_veto(events);                                counts["OLV"]          = count_events(events)
     events = jets_mass_mask(events, mass_cutoff=450);                    counts["jets_mass"]    = count_events(events)
     events = jet_rapidity_mask(events, rapidity_diff_cutoff=2.1);        counts["jet_rapidity"] = count_events(events)
