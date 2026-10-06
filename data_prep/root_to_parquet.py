@@ -14,9 +14,9 @@ total_gen_counts = defaultdict(int)
 DIR = "/dcache/atlas/llehmann/Eventgeneration/standalone/hww/"
 files = sorted([f for f in os.listdir(DIR) if f.endswith(".root")])
 
-save_DIR_raw = "/data/atlas/users/rvanrhee/hww_parquet/raw/"
-save_DIR_pre = "/data/atlas/users/rvanrhee/hww_parquet/preselection/"
-save_DIR_full = "/data/atlas/users/rvanrhee/hww_parquet/full_selection_2/"
+save_DIR_raw = "/data/atlas/users/rvanrhee/hww_parquet/raw_new/"
+save_DIR_pre = "/data/atlas/users/rvanrhee/hww_parquet/preselection_new/"
+save_DIR_full = "/data/atlas/users/rvanrhee/hww_parquet/full_selection_new/"
 os.makedirs(save_DIR_raw + "reco/", exist_ok=True)
 os.makedirs(save_DIR_raw + "gen/",  exist_ok=True)
 os.makedirs(save_DIR_pre + "reco/", exist_ok=True)
@@ -42,7 +42,7 @@ for file in tqdm(files, desc="Processing files", unit="file"):
     reco_event, counts = filter.full_preselection(reco_event)
     rd.save_events(reco_event, f"{save_DIR_pre}reco/reco_{stem}_pre.parquet")
     # Selection reco + save
-    reco_event, counts = filter.full_selection_reco(reco_event, counts=counts)
+    reco_event, counts = filter.full_selection(reco_event, counts=counts)
     rd.save_events(reco_event, f"{save_DIR_full}reco/reco_{stem}_full.parquet")
 
     # Get number of events after each cut
@@ -62,7 +62,7 @@ for file in tqdm(files, desc="Processing files", unit="file"):
     gen_event, counts = filter.full_preselection(gen_event)
     rd.save_events(gen_event, f"{save_DIR_pre}gen/gen_{stem}_pre.parquet")
     # Selection gen + save
-    gen_event, counts = filter.full_selection_gen(gen_event, counts=counts)
+    gen_event, counts = filter.full_selection(gen_event, counts=counts)
     rd.save_events(gen_event,  f"{save_DIR_full}gen/gen_{stem}_full.parquet")
 
     # Get number of events after each cut
