@@ -207,34 +207,21 @@ def remove_jets_near_leptons(events: EventObjects, deltaR_thres: float) -> Event
     """
     Remove any jet that is within deltaR_thres of either leading lepton.
     """
-    leading_leptons = ak.concatenate(
-        [
-            events.muons[:, :1],
-            events.electrons[:, :1],
-        ],
-        axis=1,
-    )
+    leading_muon = events.muons[:, 0]
+    leading_electron = events.electrons[:, 0]
 
-    pairs = ak.cartesian(
-        {"jet": events.jets, "lepton": leading_leptons},
-        axis=1,
-    )
+    electron_deltaR_mask = events.jets.deltaR(leading_electron) > deltaR_thres
+    muon_deltaR_mask = events.jets.deltaR(leading_muon) > deltaR_thres
+    total_mask = electron_deltaR_mask & muon_deltaR_mask
 
-    delta_r = pairs["jet"].deltaR(pairs["lepton"])
-
-    # True for jets that are far enough from ALL leptons
-    jet_mask = ak.all(delta_r > deltaR_thres, axis=1)
-
-    new_events = EventObjects(
+    return EventObjects(
         event_id=events.event_id,
-        jets=events.jets[jet_mask],
+        jets=events.jets[total_mask],
         muons=events.muons,
         electrons=events.electrons,
         met=events.met,
         file_id=events.file_id,
     )
-
-    return new_events
 
 def has_at_least_two_jets(events: EventObjects) -> EventObjects:
     """
