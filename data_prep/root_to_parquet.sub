@@ -1,0 +1,13 @@
+executable = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/run_root_to_parquet.sh
+
+request_cpus   = 4
+request_memory = 32G
+
++UseOS       = "el9"
++JobCategory = "medium"
+
+log    = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/logs/root_to_parquet_$(Cluster).log
+output = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/logs/root_to_parquet_$(Cluster).out
+error  = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/logs/root_to_parquet_$(Cluster).err
+
+queue
