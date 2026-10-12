@@ -14,69 +14,78 @@ from helpers.read_data import load_multiple_events, match_events, EventObjects
 
 gen_DIR  = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
 reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
+gen_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/gen/"
+reco_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/reco/"
 
-print("Loading \t(0/2)")
+OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/WWjj_Stress_Tests/test_2"
+
+print("Loading \t(0/4)")
 gen_events  = load_multiple_events(DIR=gen_DIR)
-print("Gen loaded \t(1/2)")
+print("Gen loaded \t(1/4)")
 reco_events = load_multiple_events(DIR=reco_DIR)
-print("Reco loaded \t(2/2)")
+print("Reco loaded \t(2/4)")
+gen_wwjj_events = load_multiple_events(DIR=gen_wwjj_DIR, max_files=300)
+print("Gen WWJJ loaded \t(3/4)")
+reco_wwjj_events = load_multiple_events(DIR=reco_wwjj_DIR, max_files=300)
+print("Reco WWJJ loaded \t(4/4)")
 
 print(f"Gen events:  {len(gen_events)}")
 print(f"Reco events: {len(reco_events)}")
+print(f"Gen WWJJ events:  {len(gen_wwjj_events)}")
+print(f"Reco WWJJ events: {len(reco_wwjj_events)}")
 
 gen_mask, reco_mask = match_events(gen_events, reco_events)
+gen_wwjj_mask, reco_wwjj_mask = match_events(gen_wwjj_events, reco_wwjj_events)
 
 # Keep only matched events
 gen_events  = gen_events[gen_mask]
 reco_events = reco_events[reco_mask]
+gen_wwjj_events  = gen_wwjj_events[gen_wwjj_mask]
+reco_wwjj_events = reco_wwjj_events[reco_wwjj_mask]
 
 print(f"Matched events: {len(gen_events)}")
+print(f"Matched WWJJ events: {len(gen_wwjj_events)}")
 
 
 
 def make_features(events: EventObjects) -> np.ndarray:
     j1 = events.jets[:, 0]
     j2 = events.jets[:, 1]
+    muon = events.muons[:, 0]
+    electron = events.electrons[:, 0]
     features = [
         ak.to_numpy(j1.pt),
         ak.to_numpy(j1.eta),
-        ak.to_numpy(np.sin(j1.phi)),
-        ak.to_numpy(np.cos(j1.phi)),
+        ak.to_numpy(j1.phi),
         ak.to_numpy(j2.pt),
         ak.to_numpy(j2.eta),
-        ak.to_numpy(np.sin(j2.phi)),
-        ak.to_numpy(np.cos(j2.phi)),
+        ak.to_numpy(j2.phi),
+        ak.to_numpy(muon.pt),
+        ak.to_numpy(muon.eta),
+        ak.to_numpy(muon.phi),
+        ak.to_numpy(electron.pt),
+        ak.to_numpy(electron.eta),
+        ak.to_numpy(electron.phi),
     ]
     return np.column_stack(features)
 
 
 reco_features = make_features(reco_events)
 gen_features  = make_features(gen_events)
+reco_wwjj_features = make_features(reco_wwjj_events)
+gen_wwjj_features = make_features(gen_wwjj_events)
 
-# --- Split matched events into sim half and pseudo-data half ---
-# idx_sim  -> used as theta0 (gen+reco pairs)
-# idx_data -> used as theta_unknown_S (reco only, acts as pseudo-data)
-n_total = len(reco_features)
-idx = np.arange(n_total)
-idx_sim, idx_data = train_test_split(idx, test_size=0.5, random_state=42)
 
-reco_sim  = reco_features[idx_sim]
-gen_sim   = gen_features[idx_sim]
-reco_data = reco_features[idx_data]   # pseudo-data: same distribution as sim
-
-theta0          = np.stack([gen_sim, reco_sim], axis=1)   # shape (N/2, 2, features)
-theta_unknown_S = reco_data                                # shape (N/2, features)
+theta0          = np.stack([gen_features, reco_features], axis=1)   # shape (N/2, 2, features)
+theta_unknown_S = reco_wwjj_features                               # shape (N/2, features)
 
 # Fit scaler on sim split only (gen + reco sim)
 scaler = StandardScaler()
-scaler.fit(np.concatenate([gen_sim, reco_sim], axis=0))
+scaler.fit(np.concatenate([gen_features, reco_features], axis=0))
 
 theta0[:, 0, :] = scaler.transform(theta0[:, 0, :])
 theta0[:, 1, :] = scaler.transform(theta0[:, 1, :])
 theta_unknown_S = scaler.transform(theta_unknown_S)
-
-print(f"Sim events:  {len(idx_sim)}")
-print(f"Data events: {len(idx_data)}")
 
 tf.keras.utils.set_random_seed(42)
 
@@ -116,8 +125,8 @@ wb.init_omnifold_run(
     iterations=ITERATIONS,
     theta0=theta0,
     theta_unknown_S=theta_unknown_S,
-    run_name="closure-test-split",
-    extra_config={"split": "50/50 train_test_split", "closure_test": True},
+    run_name="wwjj_stress_test",
+    extra_config={"data": "wwjj", "closure_test": False},
 )
 
 # 2. Callback factory
@@ -186,23 +195,23 @@ n_features = len(plot_features)
 fig, axes = plt.subplots(n_features, 3, figsize=(17, 4.5 * n_features))
 
 for row, (col, label, bins) in enumerate(plot_features):
-    reco_prior  = reco_features[idx_sim,  col]
-    truth_prior = gen_features [idx_sim,  col]
-    data_reco   = reco_features[idx_data, col]
-    data_truth  = gen_features [idx_data, col]
+    reco_prior  = reco_features[:,  col]
+    truth_prior = gen_features [:,  col]
+    data_reco   = reco_wwjj_features[:, col]
+    data_truth  = gen_wwjj_features[:, col]
 
     # Step 1: detector-level
-    axes[row, 0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim, unweighted")
-    axes[row, 0].hist(data_reco,  bins=bins, density=True, histtype="step", linewidth=2, label="Reco pseudo-data")
-    axes[row, 0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim, Step 1", weights=final_reco_weights)
+    axes[row, 0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), unweighted")
+    axes[row, 0].hist(data_reco,  bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (wwjj)")
+    axes[row, 0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), Step 1", weights=final_reco_weights)
     axes[row, 0].set_xlabel(label)
     axes[row, 0].set_ylabel("Normalised events")
     axes[row, 0].set_title(f"Detector-level — {label}")
     axes[row, 0].legend(fontsize=9)
 
     # Step 2: particle-level
-    axes[row, 1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Truth prior, unweighted")
-    axes[row, 1].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth pseudo-data")
+    axes[row, 1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Truth prior (HWW), unweighted")
+    axes[row, 1].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (wwjj)")
     axes[row, 1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded truth, Step 2", weights=final_truth_weights)
     axes[row, 1].set_xlabel(label)
     axes[row, 1].set_ylabel("Normalised events")
@@ -219,8 +228,8 @@ for row, (col, label, bins) in enumerate(plot_features):
 
 fig.suptitle("OmniFold closure test", y=1.01)
 fig.tight_layout()
-fig.savefig("omnifold_closure_test.pdf", bbox_inches="tight")
-fig.savefig("omnifold_closure_test.png", bbox_inches="tight")
+fig.savefig(f"{OUTDIR}/omnifold_closure_test.pdf", bbox_inches="tight")
+fig.savefig(f"{OUTDIR}/omnifold_closure_test.png", bbox_inches="tight")
 plt.show()
 
 fig2, axes2 = plt.subplots(
@@ -230,9 +239,9 @@ fig2, axes2 = plt.subplots(
 )
 
 for col_idx, (col, label, bins) in enumerate(plot_features):
-    data_reco   = reco_features[idx_data, col]
-    data_truth  = gen_features [idx_data, col]
-    truth_prior = gen_features [idx_sim,  col]
+    data_reco   = reco_wwjj_features[:, col]
+    data_truth  = gen_wwjj_features [:, col]
+    truth_prior = gen_features [:,  col]
 
     bin_centers = 0.5 * (bins[:-1] + bins[1:])
     counts_truth,    _ = np.histogram(data_truth,  bins=bins, density=True)
@@ -240,8 +249,8 @@ for col_idx, (col, label, bins) in enumerate(plot_features):
 
     # Main plot
     ax = axes2[0, col_idx]
-    ax.hist(data_reco,   bins=bins, density=True, histtype="step", linewidth=2, label="Reco pseudo-data")
-    ax.hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth pseudo-data")
+    ax.hist(data_reco,   bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (wwjj)")
+    ax.hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (wwjj)")
     ax.hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded (Step 2)", weights=final_truth_weights)
     ax.set_ylabel("Normalised events")
     ax.set_title(label)
@@ -259,6 +268,6 @@ for col_idx, (col, label, bins) in enumerate(plot_features):
 
 fig2.suptitle("OmniFold closure — summary", y=1.01)
 fig2.tight_layout()
-fig2.savefig("omnifold_closure_summary.pdf", bbox_inches="tight")
-fig2.savefig("omnifold_closure_summary.png", bbox_inches="tight")
+fig2.savefig(f"{OUTDIR}/omnifold_closure_summary.pdf", bbox_inches="tight")
+fig2.savefig(f"{OUTDIR}/omnifold_closure_summary.png", bbox_inches="tight")
 plt.show()
