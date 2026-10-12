@@ -65,16 +65,16 @@ Cuts are implemented in `event_selection_filters.py` and follow the VBF $H\right
 
 | Step | Cut |
 |---|---|
-| Jet cleaning | $$p_T > 20~\text{GeV},\ |\eta| < 4.5$$ |
-| Lepton multiplicity | $$\geq 1~\mu$$ and $$\geq 1~e$$ |
-| Opposite charge | leading $$\mu$$ and $$e$$ must have opposite charge |
-| Lepton $$p_T$$ | leading lepton $$\geq 22~\text{GeV}$$, subleading $$\geq 15~\text{GeV}$$ |
-| Lepton $$\eta$$ | $$|\eta| < 2.5$$ for both |
-| Lepton $$\Delta R$$ | leading $$\mu$$–$$e$$ separation $$\Delta R > 0.1$$ |
-| Lepton pair mass | $$m(e\mu) > 10~\text{GeV}$$ |
-| Jet–lepton overlap | remove jets within $$\Delta R < 0.4$$ of either leading lepton |
-| Jet multiplicity | $$\geq 2$$ remaining jets |
-| b-tag veto | reject events with a b-tagged jet with $$p_T > 20~\text{GeV},\ |\eta| < 2.5$$ |
+| Jet cleaning | $p_T > 20~\text{GeV},\ |\eta| < 4.5$ |
+| Lepton multiplicity | $\geq 1~\mu$ and $\geq 1~e$ |
+| Opposite charge | leading $\mu$ and $e$ must have opposite charge |
+| Lepton $p_T$ | leading lepton $\geq 22~\text{GeV}$, subleading $\geq 15~\text{GeV}$ |
+| Lepton $\eta$ | $|\eta| < 2.5$ for both |
+| Lepton $\Delta R$ | leading $\mu$–$e$ separation $\Delta R > 0.1$ |
+| Lepton pair mass | $m(e\mu) > 10~\text{GeV}$ |
+| Jet–lepton overlap | remove jets within $\Delta R < 0.4$ of either leading lepton |
+| Jet multiplicity | $\geq 2$ remaining jets |
+| b-tag veto | reject events with a b-tagged jet with $p_T > 20~\text{GeV},\ |\eta| < 2.5$ |
 
 ### Full selection (`full_selection`)
 
