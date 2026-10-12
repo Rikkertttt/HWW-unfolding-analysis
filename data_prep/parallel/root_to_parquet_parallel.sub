@@ -14,8 +14,6 @@ request_memory = 16G
 +JobCategory = "medium"
 
 # One error log per job
-log    = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/logs/root_to_parquet_$(Cluster)_$(Process).log
-output = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/logs/root_to_parquet_$(Cluster)_$(Process).out
 error  = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/logs/root_to_parquet_$(Cluster)_$(Process).err
 
 # Submit one job per ROOT file found in this directory
