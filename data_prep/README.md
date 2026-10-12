@@ -95,18 +95,19 @@ Processes all ROOT files one by one in a single Python process. Use this for qui
 
 ### How to run locally
 
+Before running, edit the `DIR` and `save_DIR_*` paths at the top of `root_to_parquet_seq.py` to point to your input ROOT files and desired output location.
+
 ```bash
-cd /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/sequential
-source /user/rvanrhee/projects_rik/.venv/bin/activate
+cd data_prep/sequential
+source /path/to/your/venv/bin/activate
 python3 root_to_parquet_seq.py
 ```
 
-Edit the `DIR` and `save_DIR_*` paths at the top of `root_to_parquet_seq.py` before running.
-
 ### How to submit to HTCondor (single job)
 
+Update the `executable` path in `root_to_parquet_seq.sub` to point to `run_root_to_parquet_seq.sh` in your checkout, then:
+
 ```bash
-# On a Stoomboot login node:
 condor_submit root_to_parquet_seq.sub
 ```
 
@@ -124,7 +125,8 @@ Processes **one ROOT file per HTCondor job**. This is the recommended approach f
 ```
 1.  Edit root_to_parquet_parallel.sub
        - Set the glob pattern in `queue file matching files ...` to your ROOT file directory.
-       - Set the `arguments` line: <ROOT file> <base output directory>
+       - Set the `arguments` line to: <full path to ROOT file> <base output directory>
+       - Update the `executable` path to point to run_root_to_parquet_parallel.sh in your checkout.
 
 2.  Submit all jobs:
         condor_submit root_to_parquet_parallel.sub
@@ -154,13 +156,16 @@ Processes **one ROOT file per HTCondor job**. This is the recommended approach f
 | OS | el9 |
 | Job category | medium |
 
+Adjust these values in `root_to_parquet_parallel.sub` as needed for your cluster.
+
 ### Configuring paths
 
-Before submitting, check the following hardcoded paths and update them if needed:
+The following locations are hardcoded and must be updated before use:
 
-- **`root_to_parquet_parallel.sub`** — `arguments` line: change the output base directory; `queue file matching files` line: change the input ROOT file glob.
-- **`aggregate_counts.py`** — `save_DIR_full`: change to the `full_selection/` directory of your output.
-- **`run_root_to_parquet_parallel.sh`** — venv path: `source /user/rvanrhee/projects_rik/.venv/bin/activate`.
+- **`root_to_parquet_parallel.sub`** — `executable`: path to `run_root_to_parquet_parallel.sh`; `arguments`: output base directory; `queue file matching files`: glob pattern for your input ROOT files.
+- **`root_to_parquet_seq.sub`** — `executable`: path to `run_root_to_parquet_seq.sh`.
+- **`aggregate_counts.py`** — `save_DIR_full`: path to the `full_selection/` output directory.
+- **`run_root_to_parquet_parallel.sh`** and **`run_root_to_parquet_seq.sh`** — update the `source` line to activate your Python virtual environment.
 
 ---
 
@@ -171,5 +176,4 @@ Before submitting, check the following hardcoded paths and update them if needed
 - `tqdm` (sequential only)
 - `helpers.read_data` — internal module for reading Delphes trees and saving/loading `EventObjects`
 
-All dependencies are expected to be installed in the project virtualenv at  
-`/user/rvanrhee/projects_rik/.venv`.
+All dependencies should be installed in a Python virtual environment. Activate it before running any script, and update the `source` line in the shell scripts to point to your venv.
