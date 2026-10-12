@@ -11,12 +11,12 @@ from tqdm import tqdm
 total_reco_counts = defaultdict(int)
 total_gen_counts = defaultdict(int)
 
-DIR = "/dcache/atlas/llehmann/Eventgeneration/standalone/hww/"
+DIR = "/dcache/atlas/llehmann/Eventgeneration/standalone/wwjj/"
 files = sorted([f for f in os.listdir(DIR) if f.endswith(".root")])
 
-save_DIR_raw = "/data/atlas/users/rvanrhee/hww_parquet/raw_new/"
-save_DIR_pre = "/data/atlas/users/rvanrhee/hww_parquet/preselection_new/"
-save_DIR_full = "/data/atlas/users/rvanrhee/hww_parquet/full_selection_new/"
+save_DIR_raw = "/data/atlas/users/rvanrhee/wwjj_parquet/raw/"
+save_DIR_pre = "/data/atlas/users/rvanrhee/wwjj_parquet/preselection/"
+save_DIR_full = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/"
 os.makedirs(save_DIR_raw + "reco/", exist_ok=True)
 os.makedirs(save_DIR_raw + "gen/",  exist_ok=True)
 os.makedirs(save_DIR_pre + "reco/", exist_ok=True)
