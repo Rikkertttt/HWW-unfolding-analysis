@@ -1,3 +1,6 @@
+# This code is used to convert ROOT files to Parquet files, while applying event selection filters.
+## IMPORTANT: This code runs sequentually, if access to HTCondor is available, it is recommended to use the parallelized version of this code: root_to_parquet_parallel.py
+
 import os
 import sys
 sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")

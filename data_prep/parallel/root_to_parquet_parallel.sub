@@ -1,0 +1,22 @@
+# Executable: shell script that activates the venv and runs the python script
+executable = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/parallel/run_root_to_parquet_parallel.sh
+# Arguments passed to the shell script:
+#   $1 = full path to the ROOT file (set by HTCondor via $(file))
+#   $2 = base directory where parquet output will be saved
+arguments = $(file) /data/atlas/users/rvanrhee/eft_chwtil5p0_parquet
+
+# Resources per job
+request_cpus   = 2
+request_memory = 16G
+
+
++UseOS       = "el9"
++JobCategory = "medium"
+
+# One error log per job
+log    = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/logs/root_to_parquet_$(Cluster)_$(Process).log
+output = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/logs/root_to_parquet_$(Cluster)_$(Process).out
+error  = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/logs/root_to_parquet_$(Cluster)_$(Process).err
+
+# Submit one job per ROOT file found in this directory
+queue file matching files /dcache/atlas/llehmann/Eventgeneration/standalone/hww_chwtil5p0/*.root
