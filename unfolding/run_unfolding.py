@@ -17,7 +17,8 @@ reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
 gen_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/gen/"
 reco_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/reco/"
 
-OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/WWjj_Stress_Tests/test_2"
+OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/WWjj_Stress_Tests/test_3"
+os.makedirs(OUTDIR, exist_ok=True)
 
 print("Loading \t(0/4)")
 gen_events  = load_multiple_events(DIR=gen_DIR)
@@ -60,12 +61,12 @@ def make_features(events: EventObjects) -> np.ndarray:
         ak.to_numpy(j2.pt),
         ak.to_numpy(j2.eta),
         ak.to_numpy(j2.phi),
-        ak.to_numpy(muon.pt),
-        ak.to_numpy(muon.eta),
-        ak.to_numpy(muon.phi),
-        ak.to_numpy(electron.pt),
-        ak.to_numpy(electron.eta),
-        ak.to_numpy(electron.phi),
+        # ak.to_numpy(muon.pt),
+        # ak.to_numpy(muon.eta),
+        # ak.to_numpy(muon.phi),
+        # ak.to_numpy(electron.pt),
+        # ak.to_numpy(electron.eta),
+        # ak.to_numpy(electron.phi),
     ]
     return np.column_stack(features)
 
