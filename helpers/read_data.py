@@ -317,10 +317,13 @@ def load_events(path: str) -> EventObjects:
         file_id   = file_id,
     )
 
-def load_multiple_events(DIR: str) -> EventObjects:
+def load_multiple_events(DIR: str, max_files: Optional[int] = None) -> EventObjects:
     """ Load multiple EventObjects from Parquet files within DIR.
     """
     paths = sorted([f for f in os.listdir(DIR) if f.endswith(".parquet")])
+
+    if max_files is not None:
+        paths = paths[:max_files]
 
     events: Optional[EventObjects] = None
 
