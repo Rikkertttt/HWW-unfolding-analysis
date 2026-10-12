@@ -111,9 +111,6 @@ Update the `executable` path in `root_to_parquet_seq.sub` to point to `run_root_
 condor_submit root_to_parquet_seq.sub
 ```
 
-The submit file requests **4 CPUs and 32 GB RAM** for the single job.  
-Logs are written to `data_prep/logs/`.
-
 ---
 
 ## Parallel mode
@@ -142,7 +139,7 @@ Processes **one ROOT file per HTCondor job**. This is the recommended approach f
 
 | File | Role |
 |---|---|
-| `root_to_parquet_parallel.py` | Processes a single ROOT file. Takes `--file` and `--savedir` as CLI arguments. |
+| `root_to_parquet_parallel.py` | Processes a single ROOT file. Takes `--file` and `--savedir` as arguments. |
 | `run_root_to_parquet_parallel.sh` | Wrapper script: activates the venv and calls the Python script. This is what HTCondor executes. |
 | `root_to_parquet_parallel.sub` | HTCondor submit file. Uses `queue file matching files` to spawn one job per ROOT file. |
 | `aggregate_counts.py` | Reads all per-file `counts_<stem>.txt` files and sums them into `counts_total.txt`. |
