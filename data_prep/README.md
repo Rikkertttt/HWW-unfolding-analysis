@@ -59,7 +59,7 @@ For generator-level events, a pt > 15 GeV cut is applied to electrons and muons 
 
 ## Event selection
 
-Cuts are implemented in `event_selection_filters.py` and follow the VBF $H\rightarrow WW^* \righarrow e\nu_e \mu\nu_\mu$ selection from [Phys. Rev. D 108, 072003](http://dx.doi.org/10.1103/PhysRevD.108.072003).
+Cuts are implemented in `event_selection_filters.py` and follow the VBF $H\rightarrow WW^* \rightarrow e\nu_e \mu\nu_\mu$ selection from [Phys. Rev. D 108, 072003](http://dx.doi.org/10.1103/PhysRevD.108.072003).
 
 ### Preselection (`full_preselection`)
 
