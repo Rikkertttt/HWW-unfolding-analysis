@@ -46,10 +46,10 @@ class WandbOmniFoldCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch: int, logs: Optional[Mapping[str, Any]] = None) -> None:
         logs = logs or {}
         wandb.log({
-            f"iter{self.iteration+1}-step{self.step}/loss":         logs.get("loss"),
-            f"iter{self.iteration+1}-step{self.step}/val_loss":     logs.get("val_loss"),
-            f"iter{self.iteration+1}-step{self.step}/accuracy":     logs.get("accuracy"),
-            f"iter{self.iteration+1}-step{self.step}/val_accuracy": logs.get("val_accuracy"),
+            f"iter{self.iteration+1}-step{self.step}/loss":                 logs.get("loss"),
+            f"iter{self.iteration+1}-step{self.step}/val_loss":             logs.get("val_loss"),
+            f"iter{self.iteration+1}-step{self.step}/weighted_accuracy":     logs.get("weighted_accuracy"),
+            f"iter{self.iteration+1}-step{self.step}/val_weighted_accuracy": logs.get("val_weighted_accuracy"),
             "epoch": epoch,
         })
 
