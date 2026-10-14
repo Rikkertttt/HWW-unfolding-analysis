@@ -181,7 +181,7 @@ def load_reco_objects(tree, verbose: bool = False) -> EventObjects:
     )
 
 
-def load_gen_objects(tree, verbose: bool = False) -> EventObjects:
+def load_gen_objects(tree, verbose: bool = False, MET_is_neutrino: bool = False) -> EventObjects:
     """Load generator-level jets, muons, electrons, and MET from a Delphes TTree.
     Leptons are extracted from the Particle branch by PID (11/13).
     """
@@ -196,8 +196,8 @@ def load_gen_objects(tree, verbose: bool = False) -> EventObjects:
         "Particle.Eta",
         "Particle.Phi",
         "Particle.Charge",
-        # "GenMissingET.MET",
-        # "GenMissingET.Phi",
+        "GenMissingET.MET",
+        "GenMissingET.Phi",
     ]
 
     if verbose: print("Loading generator-level objects")
@@ -255,23 +255,33 @@ def load_gen_objects(tree, verbose: bool = False) -> EventObjects:
     )
     if verbose: print("Made Electrons 4-momentum")
 
-    # Make the MET the actual neutrinos
-    neutrino_mask = (abs(pid) == 12) | (abs(pid) == 14)
-    nu = make_four_momentum(
-        arrays["Particle.PT"][neutrino_mask],
-        arrays["Particle.Eta"][neutrino_mask],
-        arrays["Particle.Phi"][neutrino_mask],
-        ak.zeros_like(arrays["Particle.PT"][neutrino_mask]),
-    )
-    gen_met = ak.zip(
-        {
-            "px":     ak.sum(nu.px,     axis=1),
-            "py":     ak.sum(nu.py,     axis=1),
-            "pz":     ak.sum(nu.pz,     axis=1),
-            "energy": ak.sum(nu.energy, axis=1),
-        },
-        with_name="Momentum4D",
-    )
+    # Make the MET the actual neutrinos if requested, otherwise use the GenMissingET branch.
+    if not MET_is_neutrino:
+        gen_met = make_four_momentum(
+            arrays["GenMissingET.MET"],
+            ak.zeros_like(arrays["GenMissingET.MET"]),
+            arrays["GenMissingET.Phi"],
+            ak.zeros_like(arrays["GenMissingET.MET"]),
+        )
+        if verbose: print("Made MET 4-momentum from GenMissingET branch")
+    else:
+        neutrino_mask = (abs(pid) == 12) | (abs(pid) == 14)
+        nu = make_four_momentum(
+            arrays["Particle.PT"][neutrino_mask],
+            arrays["Particle.Eta"][neutrino_mask],
+            arrays["Particle.Phi"][neutrino_mask],
+            ak.zeros_like(arrays["Particle.PT"][neutrino_mask]),
+        )
+        gen_met = ak.zip(
+            {
+                "px":     ak.sum(nu.px,     axis=1),
+                "py":     ak.sum(nu.py,     axis=1),
+                "pz":     ak.sum(nu.pz,     axis=1),
+                "energy": ak.sum(nu.energy, axis=1),
+            },
+            with_name="Momentum4D",
+        )
+        
     if verbose: print("Made MET 4-momentum")
 
     return EventObjects(
