@@ -9,8 +9,8 @@ import numpy as np
 
 import time
 
-gen_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection_2/gen/"
-reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection_2/reco/"
+gen_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
+reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
 gen_files = sorted([f for f in os.listdir(gen_DIR) if f.endswith(".parquet")])
 reco_files = sorted([f for f in os.listdir(reco_DIR) if f.endswith(".parquet")])
 
@@ -42,9 +42,6 @@ print(f"Reco loaded in {t2 - t1:.2f}s")
 assert gen_events  is not None
 assert reco_events is not None
 
-# --- Higgs proxy (unmatched) ---
-gen_higgs  = gen_events.muons[:, 0]  + gen_events.electrons[:, 0]  + gen_events.met
-reco_higgs = reco_events.muons[:, 0] + reco_events.electrons[:, 0] + reco_events.met
 
 # --- Matching masks ---
 gen_mask, reco_mask = rd.match_events(gen_events, reco_events)
@@ -185,13 +182,33 @@ plotting.plot_comparison_hist(
     ratio=True,
 )
 
+
+
 # ── Higgs proxy mass ──────────────────────────────────────────────────────────
 
+
+def higgs_mass(event, m_is0 = True):
+
+    dilepton = event.muons[:, 0] + event.electrons[:, 0]
+
+    if m_is0:
+        m_miss = 0
+    else:
+        m_miss = dilepton.mass
+
+    E_Tll = np.sqrt(dilepton.pt**2 + dilepton.mass**2)
+    E_Tmiss = np.sqrt(event.met.pt**2 + m_miss**2)
+
+    return np.sqrt(dilepton.mass**2 + m_miss**2 + 2*(E_Tll*E_Tmiss - dilepton.pt*event.met.pt*np.cos(dilepton.phi - event.met.phi)))
+
+    
+
+
 plotting.plot_comparison_hist(
-    data=[reco_higgs.mass, gen_higgs.mass],
+    data=[higgs_mass(reco_events), higgs_mass(gen_events)],
     datanames=["Reco", "Gen"],
-    filename="/user/rvanrhee/projects_rik/HWW-unfolding-analysis/figures/reco_gen_compplots/higgs_mass_unmatched",
-    title="Higgs proxy mass (unmatched)",
+    filename="/user/rvanrhee/projects_rik/HWW-unfolding-analysis/figures/reco_gen_compplots/higgs_mass_mis0_unmatched",
+    title=r"Higgs proxy mass (unmatched) ($m_{miss} = 0$)",
     xlabel="Mass [GeV]",
     bins=300,
     density=True,
@@ -199,10 +216,33 @@ plotting.plot_comparison_hist(
     xlim=(0, 500),
 )
 plotting.plot_comparison_hist(
-    data=[reco_higgs[reco_mask].mass, gen_higgs[gen_mask].mass],
+    data=[higgs_mass(reco_events)[reco_mask], higgs_mass(gen_events)[gen_mask]],
     datanames=["Reco", "Gen"],
-    filename="/user/rvanrhee/projects_rik/HWW-unfolding-analysis/figures/reco_gen_compplots/higgs_mass_matched",
-    title="Higgs proxy mass (matched)",
+    filename="/user/rvanrhee/projects_rik/HWW-unfolding-analysis/figures/reco_gen_compplots/higgs_mass_mis0_matched",
+    title=r"Higgs proxy mass (matched) ($m_{miss} = 0$)",
+    xlabel="Mass [GeV]",
+    bins=300,
+    density=True,
+    ratio=True,
+    xlim=(0, 500),
+)
+
+plotting.plot_comparison_hist(
+    data=[higgs_mass(reco_events, m_is0=False), higgs_mass(gen_events, m_is0=False)],
+    datanames=["Reco", "Gen"],
+    filename="/user/rvanrhee/projects_rik/HWW-unfolding-analysis/figures/reco_gen_compplots/higgs_mass_mnot0_unmatched",
+    title=r"Higgs proxy mass (unmatched) ($m_{miss} = m_{\ell\ell}$)",
+    xlabel="Mass [GeV]",
+    bins=300,
+    density=True,
+    ratio=True,
+    xlim=(0, 500),
+)
+plotting.plot_comparison_hist(
+    data=[higgs_mass(reco_events, m_is0=False)[reco_mask], higgs_mass(gen_events, m_is0=False)[gen_mask]],
+    datanames=["Reco", "Gen"],
+    filename="/user/rvanrhee/projects_rik/HWW-unfolding-analysis/figures/reco_gen_compplots/higgs_mass_mnot0_matched",
+    title=r"Higgs proxy mass (matched) ($m_{miss} = m_{\ell\ell}$)",
     xlabel="Mass [GeV]",
     bins=300,
     density=True,
