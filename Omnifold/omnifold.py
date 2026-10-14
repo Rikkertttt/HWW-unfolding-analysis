@@ -25,6 +25,12 @@ def weighted_binary_crossentropy(y_true, y_pred):
 
     return K.mean(t_loss)
 
+def weighted_accuracy(y_true, y_pred):
+    weights = tf.gather(y_true, [1], axis=1)
+    y_true  = tf.gather(y_true, [0], axis=1)
+    correct = tf.cast(tf.equal(y_true, tf.round(y_pred)), tf.float32)
+    return tf.reduce_sum(weights * correct) / tf.reduce_sum(weights)
+
 def omnifold(theta0,
              theta_unknown_S, 
              iterations, 
@@ -75,7 +81,7 @@ def omnifold(theta0,
 
         model.compile(loss=weighted_binary_crossentropy,
                       optimizer='Adam',
-                      metrics=['accuracy'])
+                      metrics=[weighted_accuracy])
 
         callbacks = callbacks_fn(i) if callbacks_fn is not None else [[], []]
 
@@ -107,7 +113,7 @@ def omnifold(theta0,
 
         model.compile(loss=weighted_binary_crossentropy,
                       optimizer='Adam',
-                      metrics=['accuracy'])
+                      metrics=[weighted_accuracy])
         
         model.fit(X_train_2, Y_train_2,
                   epochs=20,
