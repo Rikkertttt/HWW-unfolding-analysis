@@ -280,9 +280,8 @@ def load_gen_objects(tree, verbose: bool = False, MET_is_neutrino: bool = False)
                 "energy": ak.sum(nu.energy, axis=1),
             },
             with_name="Momentum4D",
-        )
-        
-    if verbose: print("Made MET 4-momentum")
+        ) 
+        if verbose: print("Made MET 4-momentum from neutrinos in Particle branch")
 
     return EventObjects(
         event_id=event_id,
