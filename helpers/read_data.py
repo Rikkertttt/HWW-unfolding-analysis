@@ -196,6 +196,7 @@ def load_gen_objects(tree, verbose: bool = False, MET_is_neutrino: bool = False)
         "Particle.Eta",
         "Particle.Phi",
         "Particle.Charge",
+        "Particle.Status",
         "GenMissingET.MET",
         "GenMissingET.Phi",
     ]
@@ -219,9 +220,10 @@ def load_gen_objects(tree, verbose: bool = False, MET_is_neutrino: bool = False)
     if verbose: print("Made Jets 4-momentum")
 
     pid = arrays["Particle.PID"]
+    status = arrays["Particle.Status"]
 
-    electron_mask = abs(pid) == 11
-    muon_mask = abs(pid) == 13
+    electron_mask = (abs(pid) == 11) & (status == 1)
+    muon_mask = (abs(pid) == 13) & (status == 1)
 
     gen_muons = make_four_momentum(
         arrays["Particle.PT"][muon_mask],
@@ -265,7 +267,7 @@ def load_gen_objects(tree, verbose: bool = False, MET_is_neutrino: bool = False)
         )
         if verbose: print("Made MET 4-momentum from GenMissingET branch")
     else:
-        neutrino_mask = (abs(pid) == 12) | (abs(pid) == 14)
+        neutrino_mask = ((abs(pid) == 12) | (abs(pid) == 14)) & (status == 1)
         nu = make_four_momentum(
             arrays["Particle.PT"][neutrino_mask],
             arrays["Particle.Eta"][neutrino_mask],
