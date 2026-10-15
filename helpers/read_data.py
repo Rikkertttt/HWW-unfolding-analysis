@@ -274,13 +274,13 @@ def load_gen_objects(tree, verbose: bool = False, MET_is_neutrino: bool = False)
         )
         gen_met = ak.zip(
             {
-                "px":     ak.sum(nu.px,     axis=1),
-                "py":     ak.sum(nu.py,     axis=1),
-                "pz":     ak.sum(nu.pz,     axis=1),
-                "energy": ak.sum(nu.energy, axis=1),
+                "px":     ak.sum(nu.px, axis=1),
+                "py":     ak.sum(nu.py, axis=1),
+                "pz":     ak.zeros_like(ak.sum(nu.px, axis=1)),
+                "energy": np.sqrt(ak.sum(nu.px, axis=1)**2 + ak.sum(nu.py, axis=1)**2),
             },
             with_name="Momentum4D",
-        ) 
+        )
         if verbose: print("Made MET 4-momentum from neutrinos in Particle branch")
 
     return EventObjects(
