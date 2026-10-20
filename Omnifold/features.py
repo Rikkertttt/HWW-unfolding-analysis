@@ -1,6 +1,7 @@
 from typing import List, Callable
 import numpy as np
 import awkward as ak
+from sklearn.preprocessing import StandardScaler
 from helpers.read_data import EventObjects
 
 def make_features(events: EventObjects, feature_cfg: List[Callable]) -> np.ndarray:
@@ -49,3 +50,24 @@ def make_cfg(features: List[str]) -> List[Callable]:
         else:
             print(f"Unknown feature: {feature}, skipping.")
     return cfg
+
+def make_theta_and_scale(
+        gen: np.ndarray,
+        reco: np.ndarray,
+        data_reco: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray, StandardScaler]:
+        """
+        Create the theta0 and theta_unknown_S arrays for the Omnifold algorithm, and fit a StandardScaler to the combined gen and reco data.
+        """
+
+        scaler = StandardScaler()
+        scaler.fit(np.concatenate([gen, reco], axis=0))
+
+        theta0 = np.stack([
+            scaler.transform(gen),
+            scaler.transform(reco),
+        ], axis=1)  # shape (N, 2, n_features)
+
+        theta_unknown_S = scaler.transform(data_reco)
+
+        return theta0, theta_unknown_S, scaler

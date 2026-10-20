@@ -12,7 +12,7 @@ import Omnifold.wandb_helpers as wb
 from Omnifold.omnifold import omnifold
 from helpers.read_data import load_multiple_events, match_events, EventObjects
 from Omnifold.models import build_omnifold_classifier
-from Omnifold.features import make_features, make_cfg
+from Omnifold.features import make_features, make_cfg, make_theta_and_scale
 
 gen_DIR  = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
 reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
@@ -69,6 +69,8 @@ scaler.fit(np.concatenate([gen_features, reco_features], axis=0))
 theta0[:, 0, :] = scaler.transform(theta0[:, 0, :])
 theta0[:, 1, :] = scaler.transform(theta0[:, 1, :])
 theta_unknown_S = scaler.transform(theta_unknown_S)
+
+theta0, theta_unknown_S, _ = make_theta_and_scale(gen_features, reco_features, reco_wwjj_features)
 
 tf.keras.utils.set_random_seed(42)
 
