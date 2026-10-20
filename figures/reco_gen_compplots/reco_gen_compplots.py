@@ -9,8 +9,8 @@ import numpy as np
 
 import time
 
-gen_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
-reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
+gen_DIR = "/data/atlas/users/rvanrhee/hww_METisNeutrino/full_selection/gen/"
+reco_DIR = "/data/atlas/users/rvanrhee/hww_METisNeutrino/full_selection/reco/"
 gen_files = sorted([f for f in os.listdir(gen_DIR) if f.endswith(".parquet")])
 reco_files = sorted([f for f in os.listdir(reco_DIR) if f.endswith(".parquet")])
 
@@ -213,7 +213,7 @@ plotting.plot_comparison_hist(
     bins=300,
     density=True,
     ratio=True,
-    xlim=(0, 500),
+    xlim=(0, 230),
 )
 plotting.plot_comparison_hist(
     data=[higgs_mass(reco_events)[reco_mask], higgs_mass(gen_events)[gen_mask]],
@@ -224,7 +224,7 @@ plotting.plot_comparison_hist(
     bins=300,
     density=True,
     ratio=True,
-    xlim=(0, 500),
+    xlim=(0, 230),
 )
 
 plotting.plot_comparison_hist(
@@ -236,7 +236,7 @@ plotting.plot_comparison_hist(
     bins=300,
     density=True,
     ratio=True,
-    xlim=(0, 500),
+    xlim=(0, 230),
 )
 plotting.plot_comparison_hist(
     data=[higgs_mass(reco_events, m_is0=False)[reco_mask], higgs_mass(gen_events, m_is0=False)[gen_mask]],
@@ -247,7 +247,7 @@ plotting.plot_comparison_hist(
     bins=300,
     density=True,
     ratio=True,
-    xlim=(0, 500),
+    xlim=(0, 230),
 )
 
 t3 = time.time()
