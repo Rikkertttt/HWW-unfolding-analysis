@@ -3,14 +3,11 @@ import sys
 sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")
 
 import numpy as np
-import awkward as ak
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
 import Omnifold.wandb_helpers as wb
 from Omnifold.omnifold import omnifold
-from helpers.read_data import load_multiple_events, match_events, EventObjects
+from helpers.read_data import load_multiple_events, match_events
 from Omnifold.models import build_omnifold_classifier
 from Omnifold.features import make_features, make_cfg, make_theta_and_scale
 
@@ -19,7 +16,7 @@ reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
 gen_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/gen/"
 reco_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/reco/"
 
-OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/WWjj_Stress_Tests/test_new_eval"
+OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/newpipelinetest/"
 os.makedirs(OUTDIR, exist_ok=True)
 
 print("Loading \t(0/4)")
@@ -58,17 +55,6 @@ gen_features  = make_features(gen_events, feature_cfg)
 reco_wwjj_features = make_features(reco_wwjj_events, feature_cfg)
 gen_wwjj_features = make_features(gen_wwjj_events, feature_cfg)
 
-
-theta0          = np.stack([gen_features, reco_features], axis=1)   # shape (N/2, 2, features)
-theta_unknown_S = reco_wwjj_features                               # shape (N/2, features)
-
-# Fit scaler on sim split only (gen + reco sim)
-scaler = StandardScaler()
-scaler.fit(np.concatenate([gen_features, reco_features], axis=0))
-
-theta0[:, 0, :] = scaler.transform(theta0[:, 0, :])
-theta0[:, 1, :] = scaler.transform(theta0[:, 1, :])
-theta_unknown_S = scaler.transform(theta_unknown_S)
 
 theta0, theta_unknown_S, _ = make_theta_and_scale(gen_features, reco_features, reco_wwjj_features)
 
@@ -119,8 +105,11 @@ for i in range(ITERATIONS):
 
 wb.wandb.finish()
 
-# --- Plots ---
-import matplotlib.pyplot as plt
+np.save(os.path.join(OUTDIR, "weights.npy"), weights)
+np.save(os.path.join(OUTDIR, "gen_features.npy"),       gen_features)
+np.save(os.path.join(OUTDIR, "reco_features.npy"),      reco_features)
+np.save(os.path.join(OUTDIR, "gen_wwjj_features.npy"),  gen_wwjj_features)
+np.save(os.path.join(OUTDIR, "reco_wwjj_features.npy"), reco_wwjj_features)
 
 final_reco_weights  = np.asarray(weights[-1, 0, :])
 final_truth_weights = np.asarray(weights[-1, 1, :])
@@ -143,91 +132,93 @@ print(
     f"max={final_truth_weights.max():.3f}"
 )
 
-# Define features to plot: (column index, label, bins)
-plot_features = [
-    (0, r"Leading-jet $p_T$ [GeV]",      np.linspace(0,    500, 41)),
-    (1, r"Leading-jet $\eta$",            np.linspace(-4.5, 4.5, 41)),
-    (3, r"Subleading-jet $p_T$ [GeV]",   np.linspace(0,    300, 41)),
-    (4, r"Subleading-jet $\eta$",         np.linspace(-4.5, 4.5, 41)),
-]
 
-n_features = len(plot_features)
-fig, axes = plt.subplots(n_features, 3, figsize=(17, 4.5 * n_features))
 
-for row, (col, label, bins) in enumerate(plot_features):
-    reco_prior  = reco_features[:,  col]
-    truth_prior = gen_features [:,  col]
-    data_reco   = reco_wwjj_features[:, col]
-    data_truth  = gen_wwjj_features[:, col]
+# # Define features to plot: (column index, label, bins)
+# plot_features = [
+#     (0, r"Leading-jet $p_T$ [GeV]",      np.linspace(0,    500, 41)),
+#     (1, r"Leading-jet $\eta$",            np.linspace(-4.5, 4.5, 41)),
+#     (3, r"Subleading-jet $p_T$ [GeV]",   np.linspace(0,    300, 41)),
+#     (4, r"Subleading-jet $\eta$",         np.linspace(-4.5, 4.5, 41)),
+# ]
 
-    # Step 1: detector-level
-    axes[row, 0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), unweighted")
-    axes[row, 0].hist(data_reco,  bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (wwjj)")
-    axes[row, 0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), Step 1", weights=final_reco_weights)
-    axes[row, 0].set_xlabel(label)
-    axes[row, 0].set_ylabel("Normalised events")
-    axes[row, 0].set_title(f"Detector-level — {label}")
-    axes[row, 0].legend(fontsize=9)
+# n_features = len(plot_features)
+# fig, axes = plt.subplots(n_features, 3, figsize=(17, 4.5 * n_features))
 
-    # Step 2: particle-level
-    axes[row, 1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Truth prior (HWW), unweighted")
-    axes[row, 1].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (wwjj)")
-    axes[row, 1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded truth, Step 2", weights=final_truth_weights)
-    axes[row, 1].set_xlabel(label)
-    axes[row, 1].set_ylabel("Normalised events")
-    axes[row, 1].set_title(f"Particle-level — {label}")
-    axes[row, 1].legend(fontsize=9)
+# for row, (col, label, bins) in enumerate(plot_features):
+#     reco_prior  = reco_features[:,  col]
+#     truth_prior = gen_features [:,  col]
+#     data_reco   = reco_wwjj_features[:, col]
+#     data_truth  = gen_wwjj_features[:, col]
 
-    # Weight distribution (same for all rows, but useful to repeat)
-    axes[row, 2].hist(final_truth_weights, bins=80, histtype="stepfilled", alpha=0.7)
-    axes[row, 2].axvline(1.0, color="black", linestyle="--", label="Weight = 1")
-    axes[row, 2].set_title("Final particle-level weights")
-    axes[row, 2].set_xlabel("OmniFold weight")
-    axes[row, 2].set_ylabel("Events")
-    axes[row, 2].legend()
+#     # Step 1: detector-level
+#     axes[row, 0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), unweighted")
+#     axes[row, 0].hist(data_reco,  bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (wwjj)")
+#     axes[row, 0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), Step 1", weights=final_reco_weights)
+#     axes[row, 0].set_xlabel(label)
+#     axes[row, 0].set_ylabel("Normalised events")
+#     axes[row, 0].set_title(f"Detector-level — {label}")
+#     axes[row, 0].legend(fontsize=9)
 
-fig.suptitle("OmniFold closure test", y=1.01)
-fig.tight_layout()
-fig.savefig(f"{OUTDIR}/omnifold_closure_test.pdf", bbox_inches="tight")
-fig.savefig(f"{OUTDIR}/omnifold_closure_test.png", bbox_inches="tight")
-plt.show()
+#     # Step 2: particle-level
+#     axes[row, 1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Truth prior (HWW), unweighted")
+#     axes[row, 1].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (wwjj)")
+#     axes[row, 1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded truth, Step 2", weights=final_truth_weights)
+#     axes[row, 1].set_xlabel(label)
+#     axes[row, 1].set_ylabel("Normalised events")
+#     axes[row, 1].set_title(f"Particle-level — {label}")
+#     axes[row, 1].legend(fontsize=9)
 
-fig2, axes2 = plt.subplots(
-    2, n_features,
-    figsize=(5 * n_features, 6),
-    gridspec_kw={"height_ratios": [3, 1]},
-)
+#     # Weight distribution (same for all rows, but useful to repeat)
+#     axes[row, 2].hist(final_truth_weights, bins=80, histtype="stepfilled", alpha=0.7)
+#     axes[row, 2].axvline(1.0, color="black", linestyle="--", label="Weight = 1")
+#     axes[row, 2].set_title("Final particle-level weights")
+#     axes[row, 2].set_xlabel("OmniFold weight")
+#     axes[row, 2].set_ylabel("Events")
+#     axes[row, 2].legend()
 
-for col_idx, (col, label, bins) in enumerate(plot_features):
-    data_reco   = reco_wwjj_features[:, col]
-    data_truth  = gen_wwjj_features [:, col]
-    truth_prior = gen_features [:,  col]
+# fig.suptitle("OmniFold closure test", y=1.01)
+# fig.tight_layout()
+# fig.savefig(f"{OUTDIR}/omnifold_closure_test.pdf", bbox_inches="tight")
+# fig.savefig(f"{OUTDIR}/omnifold_closure_test.png", bbox_inches="tight")
+# plt.show()
 
-    bin_centers = 0.5 * (bins[:-1] + bins[1:])
-    counts_truth,    _ = np.histogram(data_truth,  bins=bins, density=True)
-    counts_unfolded, _ = np.histogram(truth_prior, bins=bins, density=True, weights=final_truth_weights)
+# fig2, axes2 = plt.subplots(
+#     2, n_features,
+#     figsize=(5 * n_features, 6),
+#     gridspec_kw={"height_ratios": [3, 1]},
+# )
 
-    # Main plot
-    ax = axes2[0, col_idx]
-    ax.hist(data_reco,   bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (wwjj)")
-    ax.hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (wwjj)")
-    ax.hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded (Step 2)", weights=final_truth_weights)
-    ax.set_ylabel("Normalised events")
-    ax.set_title(label)
-    ax.legend(fontsize=9)
-    ax.set_xticks([])  # hide x-ticks on main, shared with ratio
+# for col_idx, (col, label, bins) in enumerate(plot_features):
+#     data_reco   = reco_wwjj_features[:, col]
+#     data_truth  = gen_wwjj_features [:, col]
+#     truth_prior = gen_features [:,  col]
 
-    # Ratio plot
-    ax_ratio = axes2[1, col_idx]
-    ratio = np.where(counts_truth > 0, counts_unfolded / counts_truth, np.nan)
-    ax_ratio.plot(bin_centers, ratio, "o", markersize=3)
-    ax_ratio.axhline(1.0, color="black", linestyle="--", linewidth=1)
-    ax_ratio.set_ylim(0.5, 1.5)
-    ax_ratio.set_xlabel(label)
-    ax_ratio.set_ylabel("Unf. / Truth")
+#     bin_centers = 0.5 * (bins[:-1] + bins[1:])
+#     counts_truth,    _ = np.histogram(data_truth,  bins=bins, density=True)
+#     counts_unfolded, _ = np.histogram(truth_prior, bins=bins, density=True, weights=final_truth_weights)
 
-fig2.suptitle("OmniFold closure — summary", y=1.01)
-fig2.tight_layout()
-fig2.savefig(f"{OUTDIR}/omnifold_closure_summary.pdf", bbox_inches="tight")
-fig2.savefig(f"{OUTDIR}/omnifold_closure_summary.png", bbox_inches="tight")
-plt.show()
+#     # Main plot
+#     ax = axes2[0, col_idx]
+#     ax.hist(data_reco,   bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (wwjj)")
+#     ax.hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (wwjj)")
+#     ax.hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded (Step 2)", weights=final_truth_weights)
+#     ax.set_ylabel("Normalised events")
+#     ax.set_title(label)
+#     ax.legend(fontsize=9)
+#     ax.set_xticks([])  # hide x-ticks on main, shared with ratio
+
+#     # Ratio plot
+#     ax_ratio = axes2[1, col_idx]
+#     ratio = np.where(counts_truth > 0, counts_unfolded / counts_truth, np.nan)
+#     ax_ratio.plot(bin_centers, ratio, "o", markersize=3)
+#     ax_ratio.axhline(1.0, color="black", linestyle="--", linewidth=1)
+#     ax_ratio.set_ylim(0.5, 1.5)
+#     ax_ratio.set_xlabel(label)
+#     ax_ratio.set_ylabel("Unf. / Truth")
+
+# fig2.suptitle("OmniFold closure — summary", y=1.01)
+# fig2.tight_layout()
+# fig2.savefig(f"{OUTDIR}/omnifold_closure_summary.pdf", bbox_inches="tight")
+# fig2.savefig(f"{OUTDIR}/omnifold_closure_summary.png", bbox_inches="tight")
+# plt.show()
