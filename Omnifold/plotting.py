@@ -1,0 +1,94 @@
+import matplotlib.pyplot as plt
+from typing import Optional
+import numpy as np
+import os
+import json
+
+from typing import List, Tuple, Optional
+
+def open_saved_files(
+    PATH:           str,
+    gen_name:       str = "gen_features",
+    reco_name:      str = "reco_features",
+    data_gen_name:  str = "data_gen_features",
+    data_reco_name: str = "data_reco_features",
+    weight_name:    str = "weights",
+    json_name:      str = "features",
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, Optional[List[str]]]:
+    """Load saved numpy arrays and optional feature-name JSON from PATH."""
+
+    arrays = [
+        np.load(os.path.join(PATH, name + ".npy"))
+        for name in (gen_name, reco_name, data_gen_name, data_reco_name, weight_name)
+    ]
+
+    json_path = os.path.join(PATH, json_name + ".json")
+    if os.path.exists(json_path):
+        with open(json_path) as f:
+            feature_names = json.load(f)
+    else:
+        feature_names = None
+        print(f"Warning: {json_path} not found, feature names unavailable.")
+
+    return (*arrays, feature_names)
+
+def plot_feature_row(
+    axes:               np.ndarray,        # array of 3 axes (one row)
+    reco_prior:         np.ndarray,        # reco sim (HWW)
+    truth_prior:        np.ndarray,        # gen sim (HWW)
+    data_reco:          np.ndarray,        # reco data (WWjj)
+    data_truth:         np.ndarray,        # gen data (WWjj)
+    final_reco_weights: np.ndarray,
+    final_truth_weights: np.ndarray,
+    bins:               np.ndarray,
+    label:              str,
+) -> None:
+    """Draw one row: detector-level | particle-level | weight distribution."""
+
+    # Detector-level
+    axes[0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), unweighted")
+    axes[0].hist(data_reco,  bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (WWjj)")
+    axes[0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), Step 1", weights=final_reco_weights)
+    axes[0].set_xlabel(label)
+    axes[0].set_ylabel("Normalised events")
+    axes[0].set_title(f"Detector-level — {label}")
+    axes[0].legend(fontsize=9)
+
+    # Particle-level
+    axes[1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Truth prior (HWW), unweighted")
+    axes[1].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (WWjj)")
+    axes[1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded truth, Step 2", weights=final_truth_weights)
+    axes[1].set_xlabel(label)
+    axes[1].set_ylabel("Normalised events")
+    axes[1].set_title(f"Particle-level — {label}")
+    axes[1].legend(fontsize=9)
+
+    # Weight distribution
+    axes[2].hist(final_truth_weights, bins=80, histtype="stepfilled", alpha=0.7)
+    axes[2].axvline(1.0, color="black", linestyle="--", label="Weight = 1")
+    axes[2].set_title("Final particle-level weights")
+    axes[2].set_xlabel("OmniFold weight")
+    axes[2].set_ylabel("Events")
+    axes[2].legend()
+
+
+def plot_omnifold_overview(
+    feature_rows: list,   # list of dicts, each with keys matching plot_feature_row args (except axes)
+    outdir:       str,
+    filename:     str  = "omnifold_overview",
+    title:        str  = "OmniFold stress test",
+) -> None:
+    """Create a figure with one row per feature and save it."""
+    n = len(feature_rows)
+    fig, axes = plt.subplots(n, 3, figsize=(17, 4.5 * n))
+    if n == 1:
+        axes = axes[np.newaxis, :]  # ensure 2D indexing works for single row
+
+    for row, kwargs in enumerate(feature_rows):
+        plot_feature_row(axes[row], **kwargs)
+
+    fig.suptitle(title, y=1.01)
+    fig.tight_layout()
+    fig.savefig(os.path.join(outdir, f"{filename}.pdf"), bbox_inches="tight")
+    fig.savefig(os.path.join(outdir, f"{filename}.png"), bbox_inches="tight")
+    plt.close(fig)
