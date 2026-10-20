@@ -11,13 +11,14 @@ import tensorflow as tf
 import Omnifold.wandb_helpers as wb
 from Omnifold.omnifold import omnifold
 from helpers.read_data import load_multiple_events, match_events, EventObjects
+from Omnifold.models import build_omnifold_classifier
 
 gen_DIR  = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
 reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
 gen_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/gen/"
 reco_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/reco/"
 
-OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/WWjj_Stress_Tests/test_3"
+OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/WWjj_Stress_Tests/test_new_eval"
 os.makedirs(OUTDIR, exist_ok=True)
 
 print("Loading \t(0/4)")
@@ -92,32 +93,7 @@ tf.keras.utils.set_random_seed(42)
 
 ITERATIONS = 2
 
-model = tf.keras.Sequential(
-    [
-        tf.keras.layers.Input(shape=(theta0.shape[-1],), name="features"),
-
-        tf.keras.layers.Dense(128, kernel_regularizer=tf.keras.regularizers.l2(1e-5)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Activation("relu"),
-        tf.keras.layers.Dropout(0.2),
-
-        tf.keras.layers.Dense(128, kernel_regularizer=tf.keras.regularizers.l2(1e-5)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Activation("relu"),
-        tf.keras.layers.Dropout(0.2),
-
-        tf.keras.layers.Dense(64, kernel_regularizer=tf.keras.regularizers.l2(1e-5)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Activation("relu"),
-
-        tf.keras.layers.Dense(32, kernel_regularizer=tf.keras.regularizers.l2(1e-5)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Activation("relu"),
-
-        tf.keras.layers.Dense(1, activation="sigmoid", name="classification"),
-    ],
-    name="omnifold_classifier",
-)
+model = build_omnifold_classifier(n_features=theta0.shape[-1])
 
 model.summary()
 
@@ -126,7 +102,7 @@ wb.init_omnifold_run(
     iterations=ITERATIONS,
     theta0=theta0,
     theta_unknown_S=theta_unknown_S,
-    run_name="wwjj_stress_test",
+    run_name="wwjj_new_eval_test",
     extra_config={"data": "wwjj", "closure_test": False},
 )
 
@@ -188,8 +164,8 @@ print(
 plot_features = [
     (0, r"Leading-jet $p_T$ [GeV]",      np.linspace(0,    500, 41)),
     (1, r"Leading-jet $\eta$",            np.linspace(-4.5, 4.5, 41)),
-    (4, r"Subleading-jet $p_T$ [GeV]",   np.linspace(0,    300, 41)),
-    (5, r"Subleading-jet $\eta$",         np.linspace(-4.5, 4.5, 41)),
+    (3, r"Subleading-jet $p_T$ [GeV]",   np.linspace(0,    300, 41)),
+    (4, r"Subleading-jet $\eta$",         np.linspace(-4.5, 4.5, 41)),
 ]
 
 n_features = len(plot_features)
