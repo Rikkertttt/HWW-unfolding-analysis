@@ -12,6 +12,7 @@ import Omnifold.wandb_helpers as wb
 from Omnifold.omnifold import omnifold
 from helpers.read_data import load_multiple_events, match_events, EventObjects
 from Omnifold.models import build_omnifold_classifier
+from Omnifold.features import make_features, make_cfg
 
 gen_DIR  = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
 reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
@@ -49,33 +50,13 @@ print(f"Matched events: {len(gen_events)}")
 print(f"Matched WWJJ events: {len(gen_wwjj_events)}")
 
 
+features = ["j1_pt", "j1_eta", "j1_phi", "j2_pt", "j2_eta", "j2_phi"]
+feature_cfg = make_cfg(features)
 
-def make_features(events: EventObjects) -> np.ndarray:
-    j1 = events.jets[:, 0]
-    j2 = events.jets[:, 1]
-    muon = events.muons[:, 0]
-    electron = events.electrons[:, 0]
-    features = [
-        ak.to_numpy(j1.pt),
-        ak.to_numpy(j1.eta),
-        ak.to_numpy(j1.phi),
-        ak.to_numpy(j2.pt),
-        ak.to_numpy(j2.eta),
-        ak.to_numpy(j2.phi),
-        # ak.to_numpy(muon.pt),
-        # ak.to_numpy(muon.eta),
-        # ak.to_numpy(muon.phi),
-        # ak.to_numpy(electron.pt),
-        # ak.to_numpy(electron.eta),
-        # ak.to_numpy(electron.phi),
-    ]
-    return np.column_stack(features)
-
-
-reco_features = make_features(reco_events)
-gen_features  = make_features(gen_events)
-reco_wwjj_features = make_features(reco_wwjj_events)
-gen_wwjj_features = make_features(gen_wwjj_events)
+reco_features = make_features(reco_events, feature_cfg)
+gen_features  = make_features(gen_events, feature_cfg)
+reco_wwjj_features = make_features(reco_wwjj_events, feature_cfg)
+gen_wwjj_features = make_features(gen_wwjj_events, feature_cfg)
 
 
 theta0          = np.stack([gen_features, reco_features], axis=1)   # shape (N/2, 2, features)
