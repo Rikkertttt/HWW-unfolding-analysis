@@ -4,6 +4,7 @@ sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")
 
 import numpy as np
 import tensorflow as tf
+import json
 
 import Omnifold.wandb_helpers as wb
 from Omnifold.omnifold import omnifold
@@ -110,6 +111,9 @@ np.save(os.path.join(OUTDIR, "gen_features.npy"),       gen_features)
 np.save(os.path.join(OUTDIR, "reco_features.npy"),      reco_features)
 np.save(os.path.join(OUTDIR, "gen_wwjj_features.npy"),  gen_wwjj_features)
 np.save(os.path.join(OUTDIR, "reco_wwjj_features.npy"), reco_wwjj_features)
+
+with open(os.path.join(OUTDIR, "features.json"), "w") as f:
+    json.dump(features, f, indent=2)
 
 final_reco_weights  = np.asarray(weights[-1, 0, :])
 final_truth_weights = np.asarray(weights[-1, 1, :])
