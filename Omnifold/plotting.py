@@ -6,21 +6,14 @@ import json
 
 from typing import List, Tuple, Optional
 
-def open_saved_files(
-    PATH:           str,
-    gen_name:       str = "gen_features",
-    reco_name:      str = "reco_features",
-    data_gen_name:  str = "data_gen_features",
-    data_reco_name: str = "data_reco_features",
-    weight_name:    str = "weights",
-    json_name:      str = "features",
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, Optional[List[str]]]:
-    """Load saved numpy arrays and optional feature-name JSON from PATH."""
+def open_saved_weights(
+    PATH:        str,
+    weight_name: str = "weights",
+    json_name:   str = "features",
+) -> Tuple[np.ndarray, Optional[List[str]]]:
+    """Load OmniFold weights and feature names from PATH."""
 
-    arrays = [
-        np.load(os.path.join(PATH, name + ".npy"))
-        for name in (gen_name, reco_name, data_gen_name, data_reco_name, weight_name)
-    ]
+    weights = np.load(os.path.join(PATH, weight_name + ".npy"))
 
     json_path = os.path.join(PATH, json_name + ".json")
     if os.path.exists(json_path):
@@ -30,7 +23,7 @@ def open_saved_files(
         feature_names = None
         print(f"Warning: {json_path} not found, feature names unavailable.")
 
-    return (*arrays, feature_names)
+    return weights, feature_names
 
 def plot_feature_row(
     axes:               np.ndarray,        # array of 3 axes (one row)

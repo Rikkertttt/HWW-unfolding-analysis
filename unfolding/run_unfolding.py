@@ -10,6 +10,7 @@ import Omnifold.wandb_helpers as wb
 from Omnifold.omnifold import omnifold
 from Omnifold.models import build_omnifold_classifier
 from Omnifold.features import get_all_data_omnifold, make_features, make_cfg, make_theta_and_scale
+from helpers.read_data import save_events
 
 gen_DIR  = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
 reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
@@ -90,10 +91,10 @@ for i in range(ITERATIONS):
 wb.wandb.finish()
 
 np.save(os.path.join(OUTDIR, "weights.npy"), weights)
-np.save(os.path.join(OUTDIR, "gen_features.npy"),       gen_features)
-np.save(os.path.join(OUTDIR, "reco_features.npy"),      reco_features)
-np.save(os.path.join(OUTDIR, "gen_wwjj_features.npy"),  gen_wwjj_features)
-np.save(os.path.join(OUTDIR, "reco_wwjj_features.npy"), reco_wwjj_features)
+save_events(gen_events,       os.path.join(OUTDIR, "prior_gen_matched.parquet"))
+save_events(reco_events,      os.path.join(OUTDIR, "prior_reco_matched.parquet"))
+save_events(gen_wwjj_events,  os.path.join(OUTDIR, "data_gen_matched.parquet"))
+save_events(reco_wwjj_events, os.path.join(OUTDIR, "data_reco_matched.parquet"))
 
 with open(os.path.join(OUTDIR, "features.json"), "w") as f:
     json.dump(features, f, indent=2)

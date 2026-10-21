@@ -1,48 +1,80 @@
-
-
 import os
 import sys
 sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")
 
 import numpy as np
-from Omnifold.plotting import open_saved_files, plot_omnifold_overview, plot_closure_summary
+import awkward as ak
+from Omnifold.plotting import open_saved_weights, plot_omnifold_overview, plot_closure_summary
+from Omnifold.features import higgs_mass
+from helpers.read_data import load_events
 
-# Path where all the .npy files are saved
+# Path where weights and matched parquet files are saved
 PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/newpipelinetest"
 
-# Open all .npy files
-gen_features, reco_features, data_gen_features, data_reco_features, weights, feature_names = open_saved_files(
-    PATH,
-    data_gen_name="gen_wwjj_features",
-    data_reco_name="reco_wwjj_features",
-)
+# Load pre-matched events (no reload/rematch needed)
+gen_events       = load_events(os.path.join(PATH, "prior_gen.parquet"))
+reco_events      = load_events(os.path.join(PATH, "prior_reco.parquet"))
+gen_wwjj_events  = load_events(os.path.join(PATH, "data_gen.parquet"))
+reco_wwjj_events = load_events(os.path.join(PATH, "data_reco.parquet"))
 
-# Extract weights
+# Load weights
+weights, _ = open_saved_weights(PATH=PATH)
+
 final_reco_weights  = weights[-1, 0, :]
 final_truth_weights = weights[-1, 1, :]
 
-# Decide which features to plot 
-# (column, label, bins)
-plot_cfg = [
-    (0, r"Leading-jet $p_T$ [GeV]",    np.linspace(0,    500, 41)),
-    (1, r"Leading-jet $\eta$",          np.linspace(-4.5, 4.5, 41)),
-    (3, r"Subleading-jet $p_T$ [GeV]", np.linspace(0,    300, 41)),
-    (4, r"Subleading-jet $\eta$",       np.linspace(-4.5, 4.5, 41)),
-]
-
-# Make rows of the chosen features
+# Compute observables directly from EventObjects
 rows = [
     dict(
-        reco_prior=reco_features[:, col],
-        truth_prior=gen_features[:, col],
-        data_reco=data_reco_features[:, col],
-        data_truth=data_gen_features[:, col],
-        final_reco_weights=final_reco_weights,
-        final_truth_weights=final_truth_weights,
-        bins=bins,
-        label=label,
-    )
-    for col, label, bins in plot_cfg
+        truth_prior        = ak.to_numpy(gen_events.jets[:, 0].pt),
+        reco_prior         = ak.to_numpy(reco_events.jets[:, 0].pt),
+        data_truth         = ak.to_numpy(gen_wwjj_events.jets[:, 0].pt),
+        data_reco          = ak.to_numpy(reco_wwjj_events.jets[:, 0].pt),
+        final_reco_weights = final_reco_weights,
+        final_truth_weights= final_truth_weights,
+        bins               = np.linspace(0, 500, 41),
+        label              = r"Leading-jet $p_T$ [GeV]",
+    ),
+    dict(
+        truth_prior        = ak.to_numpy(gen_events.jets[:, 0].eta),
+        reco_prior         = ak.to_numpy(reco_events.jets[:, 0].eta),
+        data_truth         = ak.to_numpy(gen_wwjj_events.jets[:, 0].eta),
+        data_reco          = ak.to_numpy(reco_wwjj_events.jets[:, 0].eta),
+        final_reco_weights = final_reco_weights,
+        final_truth_weights= final_truth_weights,
+        bins               = np.linspace(-4.5, 4.5, 41),
+        label              = r"Leading-jet $\eta$",
+    ),
+    dict(
+        truth_prior        = ak.to_numpy(gen_events.jets[:, 1].pt),
+        reco_prior         = ak.to_numpy(reco_events.jets[:, 1].pt),
+        data_truth         = ak.to_numpy(gen_wwjj_events.jets[:, 1].pt),
+        data_reco          = ak.to_numpy(reco_wwjj_events.jets[:, 1].pt),
+        final_reco_weights = final_reco_weights,
+        final_truth_weights= final_truth_weights,
+        bins               = np.linspace(0, 300, 41),
+        label              = r"Subleading-jet $p_T$ [GeV]",
+    ),
+    dict(
+        truth_prior        = ak.to_numpy(gen_events.jets[:, 1].eta),
+        reco_prior         = ak.to_numpy(reco_events.jets[:, 1].eta),
+        data_truth         = ak.to_numpy(gen_wwjj_events.jets[:, 1].eta),
+        data_reco          = ak.to_numpy(reco_wwjj_events.jets[:, 1].eta),
+        final_reco_weights = final_reco_weights,
+        final_truth_weights= final_truth_weights,
+        bins               = np.linspace(-4.5, 4.5, 41),
+        label              = r"Subleading-jet $\eta$",
+    ),
+    dict(
+        truth_prior        = ak.to_numpy(higgs_mass(gen_events)),
+        reco_prior         = ak.to_numpy(higgs_mass(reco_events)),
+        data_truth         = ak.to_numpy(higgs_mass(gen_wwjj_events)),
+        data_reco          = ak.to_numpy(higgs_mass(reco_wwjj_events)),
+        final_reco_weights = final_reco_weights,
+        final_truth_weights= final_truth_weights,
+        bins               = np.linspace(0, 200, 41),
+        label              = r"Higgs mass $m_H$ [GeV]",
+    ),
 ]
 
 plot_omnifold_overview(
@@ -56,5 +88,5 @@ plot_closure_summary(
     feature_rows=rows,
     outdir=PATH,
     filename="omnifold_closure_wwjj",
-    title="Omnifold closure summary - WWjj stress test",
+    title="OmniFold closure summary — WWjj stress test",
 )
