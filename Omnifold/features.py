@@ -47,6 +47,8 @@ def make_cfg(features: List[str]) -> List[Callable]:
             cfg.append(lambda e: e.electrons[:, 0].phi)
         elif feature == "met_pt":
             cfg.append(lambda e: e.met.pt)
+        elif (feature == "higgs_mass"):
+            cfg.append(lambda e: higgs_mass(e))
         else:
             print(f"Unknown feature: {feature}, skipping.")
     return cfg
@@ -71,3 +73,19 @@ def make_theta_and_scale(
         theta_unknown_S = scaler.transform(data_reco)
 
         return theta0, theta_unknown_S, scaler
+
+def higgs_mass(event, m_is0 = True):
+    """
+    Compute the Higgs mass from an event. Choose either m_met = 0 or m_met = m_ll.
+    """
+    dilepton = event.muons[:, 0] + event.electrons[:, 0]
+    
+    if m_is0:
+        m_miss = 0
+    else:
+        m_miss = dilepton.mass
+
+    E_Tll = np.sqrt(dilepton.pt**2 + dilepton.mass**2)
+    E_Tmiss = np.sqrt(event.met.pt**2 + m_miss**2)
+
+    return np.sqrt(dilepton.mass**2 + m_miss**2 + 2*(E_Tll*E_Tmiss - dilepton.pt*event.met.pt*np.cos(dilepton.phi - event.met.phi)))
