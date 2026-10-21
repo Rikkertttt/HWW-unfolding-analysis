@@ -92,3 +92,71 @@ def plot_omnifold_overview(
     fig.savefig(os.path.join(outdir, f"{filename}.pdf"), bbox_inches="tight")
     fig.savefig(os.path.join(outdir, f"{filename}.png"), bbox_inches="tight")
     plt.close(fig)
+
+
+
+
+
+
+
+def plot_closure_summary_row(
+    axes:                np.ndarray,   # array of 2 axes: [main, ratio]
+    truth_prior:         np.ndarray,
+    data_reco:           np.ndarray,
+    data_truth:          np.ndarray,
+    final_truth_weights: np.ndarray,
+    bins:                np.ndarray,
+    label:               str,
+    **kwargs,
+) -> None:
+    """Draw one column: main distribution + ratio panel."""
+
+    bin_centers      = 0.5 * (bins[:-1] + bins[1:])
+    counts_truth,    _ = np.histogram(data_truth,   bins=bins, density=True)
+    counts_unfolded, _ = np.histogram(truth_prior,  bins=bins, density=True, weights=final_truth_weights)
+
+    # Main
+    axes[0].hist(data_reco,   bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (WWjj)")
+    axes[0].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (WWjj)")
+    axes[0].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded (Step 2)", weights=final_truth_weights)
+    axes[0].set_ylabel("Normalised events")
+    axes[0].set_title(label)
+    axes[0].legend(fontsize=9)
+    axes[0].set_xticks([])
+
+    # Ratio
+    ratio = np.full_like(counts_truth, np.nan)
+    nonzero = counts_truth > 0
+    ratio[nonzero] = counts_unfolded[nonzero] / counts_truth[nonzero]
+    
+    axes[1].plot(bin_centers, ratio, "o", markersize=3)
+    axes[1].axhline(1.0, color="black", linestyle="--", linewidth=1)
+    axes[1].set_ylim(0.5, 1.5)
+    axes[1].set_xlabel(label)
+    axes[1].set_ylabel("Unf. / Truth")
+
+
+def plot_closure_summary(
+    feature_rows: list,
+    outdir:       str,
+    filename:     str = "omnifold_closure_summary",
+    title:        str = "OmniFold closure — summary",
+    **kwargs,
+) -> None:
+    n = len(feature_rows)
+    fig, axes = plt.subplots(
+        2, n,
+        figsize=(5 * n, 6),
+        gridspec_kw={"height_ratios": [3, 1]},
+    )
+    if n == 1:
+        axes = axes[:, np.newaxis]  # ensure 2D indexing for single column
+
+    for col_idx, kwargs in enumerate(feature_rows):
+        plot_closure_summary_row(axes[:, col_idx], **kwargs)
+
+    fig.suptitle(title, y=1.01)
+    fig.tight_layout()
+    fig.savefig(os.path.join(outdir, f"{filename}.pdf"), bbox_inches="tight")
+    fig.savefig(os.path.join(outdir, f"{filename}.png"), bbox_inches="tight")
+    plt.close(fig)
