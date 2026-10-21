@@ -8,9 +8,8 @@ import json
 
 import Omnifold.wandb_helpers as wb
 from Omnifold.omnifold import omnifold
-from helpers.read_data import load_multiple_events, match_events
 from Omnifold.models import build_omnifold_classifier
-from Omnifold.features import make_features, make_cfg, make_theta_and_scale
+from Omnifold.features import get_all_data_omnifold, make_features, make_cfg, make_theta_and_scale
 
 gen_DIR  = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
 reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
@@ -20,33 +19,17 @@ reco_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/reco/"
 OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/newpipelinetest/"
 os.makedirs(OUTDIR, exist_ok=True)
 
-print("Loading \t(0/4)")
-gen_events  = load_multiple_events(DIR=gen_DIR)
-print("Gen loaded \t(1/4)")
-reco_events = load_multiple_events(DIR=reco_DIR)
-print("Reco loaded \t(2/4)")
-gen_wwjj_events = load_multiple_events(DIR=gen_wwjj_DIR, max_files=300)
-print("Gen WWJJ loaded \t(3/4)")
-reco_wwjj_events = load_multiple_events(DIR=reco_wwjj_DIR, max_files=300)
-print("Reco WWJJ loaded \t(4/4)")
 
-print(f"Gen events:  {len(gen_events)}")
-print(f"Reco events: {len(reco_events)}")
-print(f"Gen WWJJ events:  {len(gen_wwjj_events)}")
-print(f"Reco WWJJ events: {len(reco_wwjj_events)}")
+gen_events, reco_events, gen_wwjj_events, reco_wwjj_events = get_all_data_omnifold(
+    prior_gen_events_path=gen_DIR,
+    prior_reco_events_path=reco_DIR,
+    data_reco_events_path=reco_wwjj_DIR,
+    data_gen_events_path=gen_wwjj_DIR,
+    max_files=[None, None, 300, 300],
+    verbose=True,
+)
 
-gen_mask, reco_mask = match_events(gen_events, reco_events)
-gen_wwjj_mask, reco_wwjj_mask = match_events(gen_wwjj_events, reco_wwjj_events)
-
-# Keep only matched events
-gen_events  = gen_events[gen_mask]
-reco_events = reco_events[reco_mask]
-gen_wwjj_events  = gen_wwjj_events[gen_wwjj_mask]
-reco_wwjj_events = reco_wwjj_events[reco_wwjj_mask]
-
-print(f"Matched events: {len(gen_events)}")
-print(f"Matched WWJJ events: {len(gen_wwjj_events)}")
-
+assert gen_wwjj_events is not None
 
 features = ["j1_pt", "j1_eta", "j1_phi", "j2_pt", "j2_eta", "j2_phi"]
 feature_cfg = make_cfg(features)
