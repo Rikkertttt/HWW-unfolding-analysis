@@ -12,10 +12,10 @@ from helpers.read_data import load_events
 PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/newpipelinetest"
 
 # Load pre-matched events (no reload/rematch needed)
-gen_events       = load_events(os.path.join(PATH, "prior_gen.parquet"))
-reco_events      = load_events(os.path.join(PATH, "prior_reco.parquet"))
-gen_wwjj_events  = load_events(os.path.join(PATH, "data_gen.parquet"))
-reco_wwjj_events = load_events(os.path.join(PATH, "data_reco.parquet"))
+gen_events       = load_events(os.path.join(PATH, "prior_gen_matched.parquet"))
+reco_events      = load_events(os.path.join(PATH, "prior_reco_matched.parquet"))
+gen_wwjj_events  = load_events(os.path.join(PATH, "data_gen_matched.parquet"))
+reco_wwjj_events = load_events(os.path.join(PATH, "data_reco_matched.parquet"))
 
 # Load weights
 weights, _ = open_saved_weights(PATH=PATH)
