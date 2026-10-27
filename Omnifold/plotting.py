@@ -15,19 +15,20 @@ def open_saved_weights(
     """Load OmniFold weights and feature names from PATH.
     
     Returns final reco weights (step 1), final truth weights (step 2), and feature names.
-    If clip_percentile is given, truth weights are clipped at that percentile.
+    If clip_percentile is given, both weight arrays are clipped at that percentile.
     """
 
     weights = np.load(os.path.join(PATH, weight_name + ".npy"))
 
-    final_reco_weights  = weights[-1, 0, :]
-    w                   = weights[-1, 1, :]
+    w_reco  = weights[-1, 0, :]
+    w_truth = weights[-1, 1, :]
 
     if clip_percentile is not None:
-        clip_val = np.percentile(w, clip_percentile)
-        final_truth_weights = np.clip(w, 0, clip_val)
+        final_reco_weights  = np.clip(w_reco,  0, np.percentile(w_reco,  clip_percentile))
+        final_truth_weights = np.clip(w_truth, 0, np.percentile(w_truth, clip_percentile))
     else:
-        final_truth_weights = w
+        final_reco_weights  = w_reco
+        final_truth_weights = w_truth
 
     json_path = os.path.join(PATH, json_name + ".json")
     if os.path.exists(json_path):
