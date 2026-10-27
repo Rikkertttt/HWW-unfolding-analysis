@@ -9,15 +9,16 @@ import json
 import Omnifold.wandb_helpers as wb
 from Omnifold.omnifold import omnifold
 from Omnifold.models import build_omnifold_classifier
-from Omnifold.features import get_all_data_omnifold, make_features, make_cfg, make_theta_and_scale
+from Omnifold.features import make_features, make_cfg, make_theta_and_scale
 from helpers.read_data import save_events
+from helpers.data_loading import get_all_data_omnifold
 
 gen_DIR  = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
 reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
 gen_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/gen/"
 reco_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/reco/"
 
-OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/newpipelinetest/"
+OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/wwjj_higgsmass_test/"
 os.makedirs(OUTDIR, exist_ok=True)
 
 
@@ -32,7 +33,7 @@ gen_events, reco_events, gen_wwjj_events, reco_wwjj_events = get_all_data_omnifo
 
 assert gen_wwjj_events is not None
 
-features = ["j1_pt", "j1_eta", "j1_phi", "j2_pt", "j2_eta", "j2_phi"]
+features = ["j1_pt", "j1_eta", "j1_phi", "j2_pt", "j2_eta", "j2_phi", "electron_pt", "electron_eta", "electron_phi", "muon_pt", "muon_eta", "muon_phi" ]
 feature_cfg = make_cfg(features)
 
 reco_features = make_features(reco_events, feature_cfg)
