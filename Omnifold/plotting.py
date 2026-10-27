@@ -40,18 +40,46 @@ def open_saved_weights(
 
     return final_reco_weights, final_truth_weights, feature_names
 
-def plot_feature_row(
-    axes:               np.ndarray,        # array of 3 axes (one row)
-    reco_prior:         np.ndarray,        # reco sim (HWW)
-    truth_prior:        np.ndarray,        # gen sim (HWW)
-    data_reco:          np.ndarray,        # reco data (WWjj)
-    data_truth:         np.ndarray,        # gen data (WWjj)
-    final_reco_weights: np.ndarray,
+def plot_weight_distributions(
+    final_reco_weights:  np.ndarray,
     final_truth_weights: np.ndarray,
-    bins:               np.ndarray,
-    label:              str,
+    outdir:              str,
+    filename:            str = "omnifold_weights",
+    title:               str = "OmniFold weight distributions",
 ) -> None:
-    """Draw one row: detector-level | particle-level | weight distribution."""
+    """Plot reco (step 1) and truth (step 2) weight distributions side by side."""
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    for ax, w, label in zip(
+        axes,
+        [final_reco_weights, final_truth_weights],
+        ["Reco weights (Step 1)", "Truth weights (Step 2)"],
+    ):
+        ax.hist(w, bins=80, histtype="stepfilled", alpha=0.7)
+        ax.axvline(1.0, color="black", linestyle="--", label="Weight = 1")
+        ax.set_title(label)
+        ax.set_xlabel("OmniFold weight")
+        ax.set_ylabel("Events")
+        ax.legend()
+
+    fig.suptitle(title)
+    fig.tight_layout()
+    fig.savefig(os.path.join(outdir, f"{filename}.pdf"), bbox_inches="tight")
+    fig.savefig(os.path.join(outdir, f"{filename}.png"), bbox_inches="tight")
+    plt.close(fig)
+
+def plot_feature_row(
+    axes:                np.ndarray,
+    reco_prior:          np.ndarray,
+    truth_prior:         np.ndarray,
+    data_reco:           np.ndarray,
+    data_truth:          np.ndarray,
+    final_reco_weights:  np.ndarray,
+    final_truth_weights: np.ndarray,
+    bins:                np.ndarray,
+    label:               str,
+) -> None:
+    """Draw one row: detector-level | particle-level."""
 
     # Detector-level
     axes[0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), unweighted")
@@ -71,15 +99,6 @@ def plot_feature_row(
     axes[1].set_title(f"Particle-level — {label}")
     axes[1].legend(fontsize=9)
 
-    # Weight distribution
-    axes[2].hist(final_truth_weights, bins=80, histtype="stepfilled", alpha=0.7)
-    axes[2].axvline(1.0, color="black", linestyle="--", label="Weight = 1")
-    axes[2].set_title("Final particle-level weights")
-    axes[2].set_xlabel("OmniFold weight")
-    axes[2].set_ylabel("Events")
-    axes[2].legend()
-
-
 def plot_omnifold_overview(
     feature_rows: list,   # list of dicts, each with keys matching plot_feature_row args (except axes)
     outdir:       str,
@@ -88,7 +107,7 @@ def plot_omnifold_overview(
 ) -> None:
     """Create a figure with one row per feature and save it."""
     n = len(feature_rows)
-    fig, axes = plt.subplots(n, 3, figsize=(17, 4.5 * n))
+    fig, axes = plt.subplots(n, 2, figsize=(17, 4.5 * n))
     if n == 1:
         axes = axes[np.newaxis, :]  # ensure 2D indexing works for single row
 
