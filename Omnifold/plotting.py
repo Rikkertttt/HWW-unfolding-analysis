@@ -7,13 +7,27 @@ import json
 from typing import List, Tuple, Optional
 
 def open_saved_weights(
-    PATH:        str,
-    weight_name: str = "weights",
-    json_name:   str = "features",
-) -> Tuple[np.ndarray, Optional[List[str]]]:
-    """Load OmniFold weights and feature names from PATH."""
+    PATH:            str,
+    weight_name:     str = "weights",
+    json_name:       str = "features",
+    clip_percentile: Optional[float] = None,
+) -> Tuple[np.ndarray, np.ndarray, Optional[List[str]]]:
+    """Load OmniFold weights and feature names from PATH.
+    
+    Returns final reco weights (step 1), final truth weights (step 2), and feature names.
+    If clip_percentile is given, truth weights are clipped at that percentile.
+    """
 
     weights = np.load(os.path.join(PATH, weight_name + ".npy"))
+
+    final_reco_weights  = weights[-1, 0, :]
+    w                   = weights[-1, 1, :]
+
+    if clip_percentile is not None:
+        clip_val = np.percentile(w, clip_percentile)
+        final_truth_weights = np.clip(w, 0, clip_val)
+    else:
+        final_truth_weights = w
 
     json_path = os.path.join(PATH, json_name + ".json")
     if os.path.exists(json_path):
@@ -23,7 +37,7 @@ def open_saved_weights(
         feature_names = None
         print(f"Warning: {json_path} not found, feature names unavailable.")
 
-    return weights, feature_names
+    return final_reco_weights, final_truth_weights, feature_names
 
 def plot_feature_row(
     axes:               np.ndarray,        # array of 3 axes (one row)
