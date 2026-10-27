@@ -9,7 +9,7 @@ from Omnifold.features import higgs_mass
 from helpers.read_data import load_events
 
 # Path where weights and matched parquet files are saved
-PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/newpipelinetest"
+PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/wwjj_higgsmass_test"
 
 # Load pre-matched events (no reload/rematch needed)
 gen_events       = load_events(os.path.join(PATH, "prior_gen_matched.parquet"))
@@ -18,10 +18,9 @@ gen_wwjj_events  = load_events(os.path.join(PATH, "data_gen_matched.parquet"))
 reco_wwjj_events = load_events(os.path.join(PATH, "data_reco_matched.parquet"))
 
 # Load weights
-weights, _ = open_saved_weights(PATH=PATH)
-
-final_reco_weights  = weights[-1, 0, :]
-final_truth_weights = weights[-1, 1, :]
+final_reco_weights, final_truth_weights, _ =  open_saved_weights(PATH=PATH, clip_percentile=None)
+print(final_reco_weights)
+print(final_truth_weights)
 
 # Compute observables directly from EventObjects
 rows = [
@@ -77,6 +76,8 @@ rows = [
     ),
 ]
 
+print("Starting plotting")
+
 plot_omnifold_overview(
     feature_rows=rows,
     outdir=PATH,
@@ -84,9 +85,13 @@ plot_omnifold_overview(
     title="OmniFold overview — WWjj stress test",
 )
 
+print("Plotted overview")
+
 plot_closure_summary(
     feature_rows=rows,
     outdir=PATH,
     filename="omnifold_closure_wwjj",
     title="OmniFold closure summary — WWjj stress test",
 )
+
+print("Plotted summary")
