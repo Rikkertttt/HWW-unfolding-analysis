@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from typing import Optional
 import numpy as np
 import os
 import json
@@ -39,6 +38,7 @@ def open_saved_weights(
         print(f"Warning: {json_path} not found, feature names unavailable.")
 
     return final_reco_weights, final_truth_weights, feature_names
+
 
 def plot_weight_distributions(
     final_reco_weights:  np.ndarray,
@@ -111,19 +111,14 @@ def plot_omnifold_overview(
     if n == 1:
         axes = axes[np.newaxis, :]  # ensure 2D indexing works for single row
 
-    for row, kwargs in enumerate(feature_rows):
-        plot_feature_row(axes[row], **kwargs)
+    for row, row_kwargs in enumerate(feature_rows):
+        plot_feature_row(axes[row], **row_kwargs)
 
     fig.suptitle(title, y=1.01)
     fig.tight_layout()
     fig.savefig(os.path.join(outdir, f"{filename}.pdf"), bbox_inches="tight")
     fig.savefig(os.path.join(outdir, f"{filename}.png"), bbox_inches="tight")
     plt.close(fig)
-
-
-
-
-
 
 
 def plot_closure_summary_row(
@@ -179,8 +174,8 @@ def plot_closure_summary(
     if n == 1:
         axes = axes[:, np.newaxis]  # ensure 2D indexing for single column
 
-    for col_idx, kwargs in enumerate(feature_rows):
-        plot_closure_summary_row(axes[:, col_idx], **kwargs)
+    for col_idx, row_kwargs in enumerate(feature_rows):
+        plot_closure_summary_row(axes[:, col_idx], **row_kwargs)
 
     fig.suptitle(title, y=1.01)
     fig.tight_layout()
