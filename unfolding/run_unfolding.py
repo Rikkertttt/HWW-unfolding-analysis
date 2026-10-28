@@ -13,36 +13,32 @@ from Omnifold.features import make_features, make_cfg, make_theta_and_scale
 from helpers.read_data import save_events
 from helpers.data_loading import get_all_data_omnifold
 
-gen_DIR  = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/gen/"
-reco_DIR = "/data/atlas/users/rvanrhee/hww_parquet/full_selection/reco/"
-gen_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/gen/"
-reco_wwjj_DIR = "/data/atlas/users/rvanrhee/wwjj_parquet/full_selection/reco/"
+prior_gen_DIR  = "/data/atlas/users/rvanrhee/hww_METisNeutrino/full_selection/gen/"
+prior_reco_DIR = "/data/atlas/users/rvanrhee/hww_METisNeutrino/full_selection/reco/"
 
-OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/wwjj_higgsmass_test/"
+OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/closure_test/"
 os.makedirs(OUTDIR, exist_ok=True)
 
 
-gen_events, reco_events, gen_wwjj_events, reco_wwjj_events = get_all_data_omnifold(
-    prior_gen_events_path=gen_DIR,
-    prior_reco_events_path=reco_DIR,
-    data_reco_events_path=reco_wwjj_DIR,
-    data_gen_events_path=gen_wwjj_DIR,
-    max_files=[None, None, 300, 300],
+prior_gen_events, prior_reco_events, data_gen_events, data_reco_events = get_all_data_omnifold(
+    prior_gen_events_path=prior_gen_DIR,
+    prior_reco_events_path=prior_reco_DIR,
+    closure_test=True,
     verbose=True,
 )
 
-assert gen_wwjj_events is not None
+assert data_gen_events is not None
 
 features = ["j1_pt", "j1_eta", "j1_phi", "j2_pt", "j2_eta", "j2_phi", "electron_pt", "electron_eta", "electron_phi", "muon_pt", "muon_eta", "muon_phi" ]
 feature_cfg = make_cfg(features)
 
-reco_features = make_features(reco_events, feature_cfg)
-gen_features  = make_features(gen_events, feature_cfg)
-reco_wwjj_features = make_features(reco_wwjj_events, feature_cfg)
-gen_wwjj_features = make_features(gen_wwjj_events, feature_cfg)
+prior_reco_features = make_features(prior_reco_events, feature_cfg)
+prior_gen_features  = make_features(prior_gen_events, feature_cfg)
+data_reco_features = make_features(data_reco_events, feature_cfg)
+data_gen_features = make_features(data_gen_events, feature_cfg)
 
 
-theta0, theta_unknown_S, _ = make_theta_and_scale(gen_features, reco_features, reco_wwjj_features)
+theta0, theta_unknown_S, _ = make_theta_and_scale(prior_gen_features, prior_reco_features, data_reco_features)
 
 tf.keras.utils.set_random_seed(42)
 
@@ -57,8 +53,8 @@ wb.init_omnifold_run(
     iterations=ITERATIONS,
     theta0=theta0,
     theta_unknown_S=theta_unknown_S,
-    run_name="wwjj_new_eval_test",
-    extra_config={"data": "wwjj", "closure_test": False},
+    run_name="hww_closure_test",
+    extra_config={"data": "hww", "closure_test": True},
 )
 
 # 2. Callback factory
@@ -92,10 +88,10 @@ for i in range(ITERATIONS):
 wb.wandb.finish()
 
 np.save(os.path.join(OUTDIR, "weights.npy"), weights)
-save_events(gen_events,       os.path.join(OUTDIR, "prior_gen_matched.parquet"))
-save_events(reco_events,      os.path.join(OUTDIR, "prior_reco_matched.parquet"))
-save_events(gen_wwjj_events,  os.path.join(OUTDIR, "data_gen_matched.parquet"))
-save_events(reco_wwjj_events, os.path.join(OUTDIR, "data_reco_matched.parquet"))
+save_events(prior_gen_events,       os.path.join(OUTDIR, "prior_gen_matched.parquet"))
+save_events(prior_reco_events,      os.path.join(OUTDIR, "prior_reco_matched.parquet"))
+save_events(data_gen_events,  os.path.join(OUTDIR, "data_gen_matched.parquet"))
+save_events(data_reco_events, os.path.join(OUTDIR, "data_reco_matched.parquet"))
 
 with open(os.path.join(OUTDIR, "features.json"), "w") as f:
     json.dump(features, f, indent=2)
