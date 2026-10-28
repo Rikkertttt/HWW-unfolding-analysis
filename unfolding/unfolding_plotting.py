@@ -5,76 +5,30 @@ sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")
 import numpy as np
 import awkward as ak
 from Omnifold.plotting import open_saved_weights, plot_omnifold_overview, plot_closure_summary, plot_weight_distributions
-from Omnifold.features import higgs_mass
+from Omnifold.features import build_feature_rows
 from helpers.read_data import load_events
 
 # Path where weights and matched parquet files are saved
-PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/wwjj_higgsmass_test"
+PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/closure_test"
 
 # Load pre-matched events (no reload/rematch needed)
-gen_events       = load_events(os.path.join(PATH, "prior_gen_matched.parquet"))
-reco_events      = load_events(os.path.join(PATH, "prior_reco_matched.parquet"))
-gen_wwjj_events  = load_events(os.path.join(PATH, "data_gen_matched.parquet"))
-reco_wwjj_events = load_events(os.path.join(PATH, "data_reco_matched.parquet"))
+prior_gen_events       = load_events(os.path.join(PATH, "prior_gen_matched.parquet"))
+prior_reco_events      = load_events(os.path.join(PATH, "prior_reco_matched.parquet"))
+data_gen_events  = load_events(os.path.join(PATH, "data_gen_matched.parquet"))
+data_reco_events = load_events(os.path.join(PATH, "data_reco_matched.parquet"))
 
 # Load weights
-final_reco_weights, final_truth_weights, _ =  open_saved_weights(PATH=PATH, clip_percentile=99.9)
-print(final_reco_weights)
-print(final_truth_weights)
+final_reco_weights, final_truth_weights, feature_names =  open_saved_weights(PATH=PATH, clip_percentile=99.9)
+assert feature_names is not None
 
 # Compute observables directly from EventObjects
-rows = [
-    dict(
-        truth_prior        = ak.to_numpy(gen_events.jets[:, 0].pt),
-        reco_prior         = ak.to_numpy(reco_events.jets[:, 0].pt),
-        data_truth         = ak.to_numpy(gen_wwjj_events.jets[:, 0].pt),
-        data_reco          = ak.to_numpy(reco_wwjj_events.jets[:, 0].pt),
-        final_reco_weights = final_reco_weights,
-        final_truth_weights= final_truth_weights,
-        bins               = np.linspace(0, 500, 41),
-        label              = r"Leading-jet $p_T$ [GeV]",
-    ),
-    dict(
-        truth_prior        = ak.to_numpy(gen_events.jets[:, 0].eta),
-        reco_prior         = ak.to_numpy(reco_events.jets[:, 0].eta),
-        data_truth         = ak.to_numpy(gen_wwjj_events.jets[:, 0].eta),
-        data_reco          = ak.to_numpy(reco_wwjj_events.jets[:, 0].eta),
-        final_reco_weights = final_reco_weights,
-        final_truth_weights= final_truth_weights,
-        bins               = np.linspace(-4.5, 4.5, 41),
-        label              = r"Leading-jet $\eta$",
-    ),
-    dict(
-        truth_prior        = ak.to_numpy(gen_events.jets[:, 1].pt),
-        reco_prior         = ak.to_numpy(reco_events.jets[:, 1].pt),
-        data_truth         = ak.to_numpy(gen_wwjj_events.jets[:, 1].pt),
-        data_reco          = ak.to_numpy(reco_wwjj_events.jets[:, 1].pt),
-        final_reco_weights = final_reco_weights,
-        final_truth_weights= final_truth_weights,
-        bins               = np.linspace(0, 300, 41),
-        label              = r"Subleading-jet $p_T$ [GeV]",
-    ),
-    dict(
-        truth_prior        = ak.to_numpy(gen_events.jets[:, 1].eta),
-        reco_prior         = ak.to_numpy(reco_events.jets[:, 1].eta),
-        data_truth         = ak.to_numpy(gen_wwjj_events.jets[:, 1].eta),
-        data_reco          = ak.to_numpy(reco_wwjj_events.jets[:, 1].eta),
-        final_reco_weights = final_reco_weights,
-        final_truth_weights= final_truth_weights,
-        bins               = np.linspace(-4.5, 4.5, 41),
-        label              = r"Subleading-jet $\eta$",
-    ),
-    dict(
-        truth_prior        = ak.to_numpy(higgs_mass(gen_events)),
-        reco_prior         = ak.to_numpy(higgs_mass(reco_events)),
-        data_truth         = ak.to_numpy(higgs_mass(gen_wwjj_events)),
-        data_reco          = ak.to_numpy(higgs_mass(reco_wwjj_events)),
-        final_reco_weights = final_reco_weights,
-        final_truth_weights= final_truth_weights,
-        bins               = np.linspace(0, 200, 41),
-        label              = r"Higgs mass $m_H$ [GeV]",
-    ),
-]
+rows = build_feature_rows(features=feature_names + ["higgs_mass"], 
+                          prior_gen_events=prior_gen_events,
+                          prior_reco_events=prior_reco_events,
+                          data_gen_events=data_gen_events,
+                          data_reco_events=data_reco_events,
+                          final_reco_weights=final_reco_weights,
+                          final_truth_weights=final_truth_weights,)
 
 print("Starting plotting")
 
