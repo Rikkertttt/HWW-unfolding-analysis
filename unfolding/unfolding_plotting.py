@@ -4,7 +4,7 @@ sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")
 
 import numpy as np
 import awkward as ak
-from Omnifold.plotting import open_saved_weights, plot_omnifold_overview, plot_closure_summary
+from Omnifold.plotting import open_saved_weights, plot_omnifold_overview, plot_closure_summary, plot_weight_distributions
 from Omnifold.features import higgs_mass
 from helpers.read_data import load_events
 
@@ -18,7 +18,7 @@ gen_wwjj_events  = load_events(os.path.join(PATH, "data_gen_matched.parquet"))
 reco_wwjj_events = load_events(os.path.join(PATH, "data_reco_matched.parquet"))
 
 # Load weights
-final_reco_weights, final_truth_weights, _ =  open_saved_weights(PATH=PATH, clip_percentile=None)
+final_reco_weights, final_truth_weights, _ =  open_saved_weights(PATH=PATH, clip_percentile=99.9)
 print(final_reco_weights)
 print(final_truth_weights)
 
@@ -77,6 +77,15 @@ rows = [
 ]
 
 print("Starting plotting")
+
+plot_weight_distributions(
+    final_reco_weights=final_reco_weights,
+    final_truth_weights=final_truth_weights,
+    outdir=PATH,
+    filename="omnifold_weights_wwjj",
+)
+
+print("Plotted weights")
 
 plot_omnifold_overview(
     feature_rows=rows,
