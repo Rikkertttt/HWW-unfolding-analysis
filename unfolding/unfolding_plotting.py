@@ -36,7 +36,7 @@ plot_weight_distributions(
     final_reco_weights=final_reco_weights,
     final_truth_weights=final_truth_weights,
     outdir=PATH,
-    filename="omnifold_weights_wwjj",
+    filename="omnifold_weights_closure",
 )
 
 print("Plotted weights")
@@ -44,8 +44,8 @@ print("Plotted weights")
 plot_omnifold_overview(
     feature_rows=rows,
     outdir=PATH,
-    filename="omnifold_overview_wwjj",
-    title="OmniFold overview — WWjj stress test",
+    filename="omnifold_overview_closure",
+    title="OmniFold overview — closure test",
 )
 
 print("Plotted overview")
@@ -53,8 +53,8 @@ print("Plotted overview")
 plot_closure_summary(
     feature_rows=rows,
     outdir=PATH,
-    filename="omnifold_closure_wwjj",
-    title="OmniFold closure summary — WWjj stress test",
+    filename="omnifold_closure_closure",
+    title="OmniFold closure summary — closure test",
 )
 
 print("Plotted summary")
