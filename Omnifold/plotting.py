@@ -209,8 +209,8 @@ def plot_closure_summary(
     fig = plt.figure(figsize=(4 * ncols, 4 * nrows))
 
     gap     = 0.06
-    top_pad = 0.04
-    block_h = (1.0 - gap * (nrows - 1) - top_pad) / nrows
+    top_pad = 0.25 if nrows == 1 else 0.06
+    block_h = (1.0 - top_pad - gap * max(nrows - 1, 0)) / nrows
 
     gs_rows = []
     for r in range(nrows):
@@ -221,7 +221,7 @@ def plot_closure_summary(
             left=0.06, right=0.98,
             top=top,
             bottom=bottom,
-            hspace=0.05,
+            hspace=0.1,
             wspace=0.4,
             height_ratios=[3, 1],
         )
@@ -235,7 +235,7 @@ def plot_closure_summary(
         ax_ratio = fig.add_subplot(gs[1, col])
         plot_closure_summary_row(np.array([ax_main, ax_ratio]), **row_kwargs, data_name=data_name)
 
-    fig.suptitle(title, y=1.01)
+    fig.suptitle(title, y=1.0 - top_pad / 2)
     fig.savefig(os.path.join(outdir, f"{filename}.pdf"), bbox_inches="tight")
     fig.savefig(os.path.join(outdir, f"{filename}.png"), bbox_inches="tight")
     plt.close(fig)
