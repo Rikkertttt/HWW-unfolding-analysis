@@ -46,6 +46,7 @@ plot_omnifold_overview(
     outdir=PATH,
     filename="omnifold_overview_closure",
     title="OmniFold overview — closure test",
+    prior_data_name=["HWW prior", "HWW data"]
 )
 
 print("Plotted overview")
@@ -55,6 +56,16 @@ plot_closure_summary(
     outdir=PATH,
     filename="omnifold_closure_closure",
     title="OmniFold closure summary — closure test",
+    data_name="HWW"
 )
+
+for row in rows:
+    plot_closure_summary(
+        feature_rows=[row],
+        outdir=PATH + "/individual_plots",
+        filename=f"omnifold_closure_{row['feature']}_closure",
+        title=f"OmniFold closure summary — {row['feature']} (closure test)",
+        data_name="HWW"
+    )
 
 print("Plotted summary")
