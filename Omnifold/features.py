@@ -254,5 +254,6 @@ def build_feature_rows(
             final_truth_weights = final_truth_weights,
             bins                = bins,
             label               = label,
+            feature             = feature,
         ))
     return rows
