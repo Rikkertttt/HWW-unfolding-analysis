@@ -209,11 +209,12 @@ def plot_closure_summary(
     fig = plt.figure(figsize=(4 * ncols, 4 * nrows))
 
     gap     = 0.06
-    block_h = (1.0 - gap * (nrows - 1)) / nrows
+    top_pad = 0.04
+    block_h = (1.0 - gap * (nrows - 1) - top_pad) / nrows
 
     gs_rows = []
     for r in range(nrows):
-        top    = 1.0 - r * (block_h + gap)
+        top    = 1.0 - top_pad - r * (block_h + gap)
         bottom = top - block_h
         gs = fig.add_gridspec(
             2, ncols,
