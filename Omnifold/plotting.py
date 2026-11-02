@@ -78,32 +78,45 @@ def plot_feature_row(
     final_truth_weights: np.ndarray,
     bins:                np.ndarray,
     label:               str,
+    prior_data_name:     list[str] = [],
+    **kwargs,
 ) -> None:
     """Draw one row: detector-level | particle-level."""
 
+    if len(prior_data_name) == 2:
+        prior_name = f" ({prior_data_name[0]})"
+        data_name = f" ({prior_data_name[1]})"
+    else:
+        if len(prior_data_name) > 0:
+            print("Wrong input for names: `prior_data_name` requires two string inputs: [prior, data].")
+            print("Using default: no names")
+        prior_name = ""
+        data_name = ""
+
     # Detector-level
-    axes[0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), unweighted")
-    axes[0].hist(data_reco,  bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (WWjj)")
-    axes[0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Reco sim (HWW), Step 1", weights=final_reco_weights)
+    axes[0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label=f"Reco sim{prior_name}, unweighted")
+    axes[0].hist(data_reco,  bins=bins, density=True, histtype="step", linewidth=2, label=f"Reco data{data_name}")
+    axes[0].hist(reco_prior, bins=bins, density=True, histtype="step", linewidth=2, label=f"Reco sim{prior_name}, Step 1", weights=final_reco_weights)
     axes[0].set_xlabel(label)
     axes[0].set_ylabel("Normalised events")
     axes[0].set_title(f"Detector-level — {label}")
     axes[0].legend(fontsize=9)
 
     # Particle-level
-    axes[1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Truth prior (HWW), unweighted")
-    axes[1].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (WWjj)")
-    axes[1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded truth, Step 2", weights=final_truth_weights)
+    axes[1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label=f"Truth prior{prior_name}, unweighted")
+    axes[1].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label=f"Truth data{data_name}")
+    axes[1].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label=f"Unfolded truth, Step 2", weights=final_truth_weights)
     axes[1].set_xlabel(label)
     axes[1].set_ylabel("Normalised events")
     axes[1].set_title(f"Particle-level — {label}")
     axes[1].legend(fontsize=9)
 
 def plot_omnifold_overview(
-    feature_rows: list,   # list of dicts, each with keys matching plot_feature_row args (except axes)
-    outdir:       str,
-    filename:     str  = "omnifold_overview",
-    title:        str  = "OmniFold stress test",
+    feature_rows:        list,   # list of dicts, each with keys matching plot_feature_row args (except axes)
+    outdir:              str,
+    filename:            str  = "omnifold_overview",
+    title:               str  = "OmniFold stress test",
+    prior_data_name:     list[str] = []
 ) -> None:
     """Create a figure with one row per feature and save it."""
     n = len(feature_rows)
@@ -112,7 +125,7 @@ def plot_omnifold_overview(
         axes = axes[np.newaxis, :]  # ensure 2D indexing works for single row
 
     for row, row_kwargs in enumerate(feature_rows):
-        plot_feature_row(axes[row], **row_kwargs)
+        plot_feature_row(axes[row], **row_kwargs, prior_data_name=prior_data_name)
 
     fig.suptitle(title, y=1.01)
     fig.tight_layout()
@@ -129,18 +142,22 @@ def plot_closure_summary_row(
     final_truth_weights: np.ndarray,
     bins:                np.ndarray,
     label:               str,
+    data_name:           str = "",
     **kwargs,
 ) -> None:
     """Draw one column: main distribution + ratio panel."""
+
+    if data_name != "":
+        data_name = f" ({data_name})"
 
     bin_centers      = 0.5 * (bins[:-1] + bins[1:])
     counts_truth,    _ = np.histogram(data_truth,   bins=bins, density=True)
     counts_unfolded, _ = np.histogram(truth_prior,  bins=bins, density=True, weights=final_truth_weights)
 
     # Main
-    axes[0].hist(data_reco,   bins=bins, density=True, histtype="step", linewidth=2, label="Reco data (WWjj)")
-    axes[0].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label="Truth data (WWjj)")
-    axes[0].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label="Unfolded (Step 2)", weights=final_truth_weights)
+    axes[0].hist(data_reco,   bins=bins, density=True, histtype="step", linewidth=2, label=f"Reco data{data_name}")
+    axes[0].hist(data_truth,  bins=bins, density=True, histtype="step", linewidth=2, label=f"Truth data{data_name}")
+    axes[0].hist(truth_prior, bins=bins, density=True, histtype="step", linewidth=2, label=f"Unfolded (Step 2)", weights=final_truth_weights)
     axes[0].set_ylabel("Normalised events")
     axes[0].set_title(label)
     axes[0].legend(fontsize=9)
@@ -163,22 +180,61 @@ def plot_closure_summary(
     outdir:       str,
     filename:     str = "omnifold_closure_summary",
     title:        str = "OmniFold closure — summary",
-    **kwargs,
+    ncols:        int = 4,
+    data_name:    str = ""
 ) -> None:
-    n = len(feature_rows)
-    fig, axes = plt.subplots(
-        2, n,
-        figsize=(5 * n, 6),
-        gridspec_kw={"height_ratios": [3, 1]},
-    )
-    if n == 1:
-        axes = axes[:, np.newaxis]  # ensure 2D indexing for single column
+    """Plot closure summary with main + ratio panel for each feature.
 
-    for col_idx, row_kwargs in enumerate(feature_rows):
-        plot_closure_summary_row(axes[:, col_idx], **row_kwargs)
+    Features are laid out in a grid of ``ncols`` columns, wrapping
+    automatically when there are more features than columns.  Each cell
+    contains a main histogram panel and a ratio panel below it.
+
+    Parameters
+    ----------
+    feature_rows : list of dict
+        As returned by ``build_feature_rows``.
+    outdir : str
+        Directory to save the output files.
+    filename : str
+        Base filename (without extension).
+    title : str
+        Figure suptitle.
+    ncols : int
+        Number of columns in the grid (default 4).
+    """
+    n     = len(feature_rows)
+    ncols = min(ncols, n)
+    nrows = (n + ncols - 1) // ncols  # ceiling division
+
+    fig = plt.figure(figsize=(4 * ncols, 4 * nrows))
+
+    gap     = 0.06
+    block_h = (1.0 - gap * (nrows - 1)) / nrows
+
+    gs_rows = []
+    for r in range(nrows):
+        top    = 1.0 - r * (block_h + gap)
+        bottom = top - block_h
+        gs = fig.add_gridspec(
+            2, ncols,
+            left=0.06, right=0.98,
+            top=top,
+            bottom=bottom,
+            hspace=0.05,
+            wspace=0.4,
+            height_ratios=[3, 1],
+        )
+        gs_rows.append(gs)
+
+    for idx, row_kwargs in enumerate(feature_rows):
+        r   = idx // ncols
+        col = idx % ncols
+        gs  = gs_rows[r]
+        ax_main  = fig.add_subplot(gs[0, col])
+        ax_ratio = fig.add_subplot(gs[1, col])
+        plot_closure_summary_row(np.array([ax_main, ax_ratio]), **row_kwargs, data_name=data_name)
 
     fig.suptitle(title, y=1.01)
-    fig.tight_layout()
     fig.savefig(os.path.join(outdir, f"{filename}.pdf"), bbox_inches="tight")
     fig.savefig(os.path.join(outdir, f"{filename}.png"), bbox_inches="tight")
     plt.close(fig)
