@@ -46,6 +46,7 @@ def plot_weight_distributions(
     outdir:              str,
     filename:            str = "omnifold_weights",
     title:               str = "OmniFold weight distributions",
+    bins:                int = 150,
 ) -> None:
     """Plot reco (step 1) and truth (step 2) weight distributions side by side."""
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
@@ -55,7 +56,7 @@ def plot_weight_distributions(
         [final_reco_weights, final_truth_weights],
         ["Reco weights (Step 1)", "Truth weights (Step 2)"],
     ):
-        ax.hist(w, bins=80, histtype="stepfilled", alpha=0.7)
+        ax.hist(w, bins=bins, histtype="stepfilled", alpha=0.7)
         ax.axvline(1.0, color="black", linestyle="--", label="Weight = 1")
         ax.set_title(label)
         ax.set_xlabel("OmniFold weight")
