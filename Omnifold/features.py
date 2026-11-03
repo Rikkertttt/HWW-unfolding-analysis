@@ -188,19 +188,19 @@ def make_theta_and_scale(
 # Used by build_feature_rows() to avoid repeating bin/label definitions at
 # every call site.
 FEATURE_META = {
-    "j1_pt":       (lambda e: ak.to_numpy(e.jets[:, 0].pt),        np.linspace(0,      500, 41), r"Leading-jet $p_T$ [GeV]"),
-    "j1_eta":      (lambda e: ak.to_numpy(e.jets[:, 0].eta),       np.linspace(-4.5,   4.5, 41), r"Leading-jet $\eta$"),
-    "j1_phi":      (lambda e: ak.to_numpy(e.jets[:, 0].phi),       np.linspace(-np.pi, np.pi, 41), r"Leading-jet $\phi$"),
-    "j2_pt":       (lambda e: ak.to_numpy(e.jets[:, 1].pt),        np.linspace(0,      300, 41), r"Subleading-jet $p_T$ [GeV]"),
-    "j2_eta":      (lambda e: ak.to_numpy(e.jets[:, 1].eta),       np.linspace(-4.5,   4.5, 41), r"Subleading-jet $\eta$"),
-    "j2_phi":      (lambda e: ak.to_numpy(e.jets[:, 1].phi),       np.linspace(-np.pi, np.pi, 41), r"Subleading-jet $\phi$"),
-    "electron_pt": (lambda e: ak.to_numpy(e.electrons[:, 0].pt),   np.linspace(0,      300, 41), r"Electron $p_T$ [GeV]"),
-    "electron_eta":(lambda e: ak.to_numpy(e.electrons[:, 0].eta),  np.linspace(-4.5,   4.5, 41), r"Electron $\eta$"),
-    "electron_phi":(lambda e: ak.to_numpy(e.electrons[:, 0].phi),  np.linspace(-np.pi, np.pi, 41), r"Electron $\phi$"),
-    "muon_pt":     (lambda e: ak.to_numpy(e.muons[:, 0].pt),       np.linspace(0,      300, 41), r"Muon $p_T$ [GeV]"),
-    "muon_eta":    (lambda e: ak.to_numpy(e.muons[:, 0].eta),      np.linspace(-4.5,   4.5, 41), r"Muon $\eta$"),
-    "muon_phi":    (lambda e: ak.to_numpy(e.muons[:, 0].phi),      np.linspace(-np.pi, np.pi, 41), r"Muon $\phi$"),
-    "higgs_mass":  (lambda e: ak.to_numpy(higgs_mass(e)),          np.linspace(0,      200, 41), r"Higgs mass $m_H$ [GeV]"),
+    "j1_pt":       (lambda e: ak.to_numpy(e.jets[:, 0].pt),        np.linspace(0,      500, 81), r"Leading-jet $p_T$ [GeV]"),
+    "j1_eta":      (lambda e: ak.to_numpy(e.jets[:, 0].eta),       np.linspace(-4.5,   4.5, 81), r"Leading-jet $\eta$"),
+    "j1_phi":      (lambda e: ak.to_numpy(e.jets[:, 0].phi),       np.linspace(-np.pi, np.pi, 81), r"Leading-jet $\phi$"),
+    "j2_pt":       (lambda e: ak.to_numpy(e.jets[:, 1].pt),        np.linspace(0,      300, 81), r"Subleading-jet $p_T$ [GeV]"),
+    "j2_eta":      (lambda e: ak.to_numpy(e.jets[:, 1].eta),       np.linspace(-4.5,   4.5, 81), r"Subleading-jet $\eta$"),
+    "j2_phi":      (lambda e: ak.to_numpy(e.jets[:, 1].phi),       np.linspace(-np.pi, np.pi, 81), r"Subleading-jet $\phi$"),
+    "electron_pt": (lambda e: ak.to_numpy(e.electrons[:, 0].pt),   np.linspace(0,      300, 81), r"Electron $p_T$ [GeV]"),
+    "electron_eta":(lambda e: ak.to_numpy(e.electrons[:, 0].eta),  np.linspace(-4.5,   4.5, 81), r"Electron $\eta$"),
+    "electron_phi":(lambda e: ak.to_numpy(e.electrons[:, 0].phi),  np.linspace(-np.pi, np.pi, 81), r"Electron $\phi$"),
+    "muon_pt":     (lambda e: ak.to_numpy(e.muons[:, 0].pt),       np.linspace(0,      300, 81), r"Muon $p_T$ [GeV]"),
+    "muon_eta":    (lambda e: ak.to_numpy(e.muons[:, 0].eta),      np.linspace(-4.5,   4.5, 81), r"Muon $\eta$"),
+    "muon_phi":    (lambda e: ak.to_numpy(e.muons[:, 0].phi),      np.linspace(-np.pi, np.pi, 81), r"Muon $\phi$"),
+    "higgs_mass":  (lambda e: ak.to_numpy(higgs_mass(e)),          np.linspace(0,      200, 81), r"Higgs mass $m_H$ [GeV]"),
 }
 
 
