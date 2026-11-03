@@ -9,7 +9,7 @@ from Omnifold.features import build_feature_rows
 from helpers.read_data import load_events
 
 # Path where weights and matched parquet files are saved
-PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/closure_test"
+PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/eft_chwtil5p0"
 
 # Load pre-matched events (no reload/rematch needed)
 prior_gen_events       = load_events(os.path.join(PATH, "prior_gen_matched.parquet"))
@@ -30,13 +30,21 @@ rows = build_feature_rows(features=feature_names + ["higgs_mass"],
                           final_reco_weights=final_reco_weights,
                           final_truth_weights=final_truth_weights,)
 
+
+
 print("Starting plotting")
+
+overview_dir = os.path.join(PATH, "individual_plots", "overview")
+closure_dir = os.path.join(PATH, "individual_plots", "closure")
+os.makedirs(overview_dir, exist_ok=True)
+os.makedirs(closure_dir, exist_ok=True)
 
 plot_weight_distributions(
     final_reco_weights=final_reco_weights,
     final_truth_weights=final_truth_weights,
     outdir=PATH,
-    filename="omnifold_weights_closure",
+    filename="omnifold_weights_eft_chwtil5p0",
+    bins=150,
 )
 
 print("Plotted weights")
@@ -44,18 +52,18 @@ print("Plotted weights")
 plot_omnifold_overview(
     feature_rows=rows,
     outdir=PATH,
-    filename="omnifold_overview_closure",
-    title="OmniFold overview — closure test",
-    prior_data_name=["HWW prior", "HWW data"]
+    filename="omnifold_overview_eft_chwtil5p0",
+    title="OmniFold overview — eft_chwtil5p0",
+    prior_data_name=["HWW prior", "HWW eft data"],
 )
 
 for row in rows:
     plot_omnifold_overview(
         feature_rows=[row],
-        outdir=PATH + "/individual_plots/overview",
-        filename=f"omnifold_overview_{row['feature']}_closure",
-        title=f"OmniFold overview — {row['feature']} (closure test)",
-        prior_data_name=["HWW prior", "HWW data"]
+        outdir=overview_dir,
+        filename=f"omnifold_overview_{row['feature']}_eft_chwtil5p0",
+        title=f"OmniFold overview — {row['feature']} (eft_chwtil5p0)",
+        prior_data_name=["HWW prior", "HWW eft data"],
     )
 
 print("Plotted overview")
@@ -63,18 +71,18 @@ print("Plotted overview")
 plot_closure_summary(
     feature_rows=rows,
     outdir=PATH,
-    filename="omnifold_closure_closure",
-    title="OmniFold closure summary — closure test",
-    data_name="HWW"
+    filename="omnifold_closure_eft_chwtil5p0",
+    title="OmniFold closure summary — eft_chwtil5p0",
+    data_name="HWW eft data",
 )
 
 for row in rows:
     plot_closure_summary(
         feature_rows=[row],
-        outdir=PATH + "/individual_plots/closure",
-        filename=f"omnifold_closure_{row['feature']}_closure",
-        title=f"OmniFold closure summary — {row['feature']} (closure test)",
-        data_name="HWW"
+        outdir=closure_dir,
+        filename=f"omnifold_closure_{row['feature']}_eft_chwtil5p0",
+        title=f"OmniFold closure summary — {row['feature']} (eft_chwtil5p0)",
+        data_name="HWW eft data",
     )
 
 print("Plotted summary")
