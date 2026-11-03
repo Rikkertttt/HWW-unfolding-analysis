@@ -6,7 +6,7 @@ def get_all_data_omnifold(
     prior_gen_events_path:  str,
     data_reco_events_path:  Optional[str] = None,
     data_gen_events_path:   Optional[str] = None,
-    max_files:              List[Optional[int]] = [None, None, None, None],
+    max_files:              Optional[List[Optional[int]]] = None,
     closure_test:           bool = False,
     verbose:                bool = False,
 ):
@@ -22,6 +22,9 @@ def get_all_data_omnifold(
     Otherwise, data_reco_events_path must be provided. data_gen_events_path
     is optional and only used for stress tests where truth-level data is available.
     """
+
+    if max_files is None:
+        max_files = [None, None, None, None]
 
     # --- Load prior ---
     if verbose: print("Loading prior gen  \t(1/4)")
