@@ -81,7 +81,8 @@ def omnifold(theta0,
 
         model.compile(loss=weighted_binary_crossentropy,
                       optimizer='Adam',
-                      metrics=[weighted_accuracy])
+                      metrics=[weighted_accuracy],
+                      jit_compile=False)
 
         callbacks = callbacks_fn(i) if callbacks_fn is not None else [[], []]
 
@@ -113,7 +114,8 @@ def omnifold(theta0,
 
         model.compile(loss=weighted_binary_crossentropy,
                       optimizer='Adam',
-                      metrics=[weighted_accuracy])
+                      metrics=[weighted_accuracy],
+                      jit_compile=False)
         
         model.fit(X_train_2, Y_train_2,
                   epochs=20,
