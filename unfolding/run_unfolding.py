@@ -1,4 +1,6 @@
 import os
+os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=0"
+
 import sys
 sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")
 
@@ -13,17 +15,22 @@ from Omnifold.features import make_features, make_cfg, make_theta_and_scale
 from helpers.read_data import save_events
 from helpers.data_loading import get_all_data_omnifold
 
-prior_gen_DIR  = "/data/atlas/users/rvanrhee/hww_METisNeutrino/full_selection/gen/"
+prior_gen_DIR = "/data/atlas/users/rvanrhee/hww_METisNeutrino/full_selection/gen/"
 prior_reco_DIR = "/data/atlas/users/rvanrhee/hww_METisNeutrino/full_selection/reco/"
+data_gen_DIR  = "/data/atlas/users/rvanrhee/eft_chwtil5p0_parquet/full_selection/gen/"
+data_reco_DIR = "/data/atlas/users/rvanrhee/eft_chwtil5p0_parquet/full_selection/reco/"
 
-OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/closure_test/"
+wbname = "omnifold_hww_eft_chwtil5p0"
+
+OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/eft_chwtil5p0/"
 os.makedirs(OUTDIR, exist_ok=True)
 
 
 prior_gen_events, prior_reco_events, data_gen_events, data_reco_events = get_all_data_omnifold(
     prior_gen_events_path=prior_gen_DIR,
     prior_reco_events_path=prior_reco_DIR,
-    closure_test=True,
+    data_gen_events_path=data_gen_DIR,
+    data_reco_events_path=data_reco_DIR,
     verbose=True,
 )
 
@@ -41,7 +48,6 @@ data_gen_features = make_features(data_gen_events, feature_cfg)
 theta0, theta_unknown_S, _ = make_theta_and_scale(prior_gen_features, prior_reco_features, data_reco_features)
 
 tf.keras.utils.set_random_seed(42)
-
 ITERATIONS = 2
 
 model = build_omnifold_classifier(n_features=theta0.shape[-1])
@@ -53,7 +59,7 @@ wb.init_omnifold_run(
     iterations=ITERATIONS,
     theta0=theta0,
     theta_unknown_S=theta_unknown_S,
-    run_name="hww_closure_test",
+    run_name=wbname,
     extra_config={"data": "hww", "closure_test": True},
 )
 
