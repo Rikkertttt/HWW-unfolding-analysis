@@ -3,17 +3,23 @@
 import numpy as np
 import ydf
 
-def reweight_ydf(events,model,batch_size=10000):
-    f = model.predict(events, batch_size=batch_size)
-    weights = f / (1. - f)
-    return np.squeeze(np.nan_to_num(weights))
+def reweight_ydf(events_dict, model):
+    probs = model.predict(events_dict)["probabilities"][:, 1]  # P(label=1)
+    weights = probs / (1. - probs)
+    return np.nan_to_num(weights)
+
+def to_ydf_ds(X, feature_names, y, w):
+    ds = {name: X[:, i] for i, name in enumerate(feature_names)}
+    ds["label"] = y.astype(str)   # must be string for CATEGORICAL
+    ds["weight"] = w
+    return ds
 
 
 def omnifold_ydf(theta0,
              theta_unknown_S, 
              iterations,  
-             verbose=0, 
-             callbacks_fn=None):
+             feature_names = None,
+             verbose=0):
 
     weights = np.empty(shape=(iterations, 2, len(theta0)))
     # shape = (iteration, step, event)
@@ -30,6 +36,9 @@ def omnifold_ydf(theta0,
 
     xvals_2 = np.concatenate((theta0_G, theta0_G))
     yvals_2 = np.concatenate((labels0, labels_unknown_step2))
+
+    if (feature_names is None):
+        feature_names = ["f{}".format(i) for i in range(theta0.shape[2])]
 
     # initial iterative weights are ones
     weights_pull = np.ones(len(theta0_S))
@@ -50,25 +59,12 @@ def omnifold_ydf(theta0,
 
         weights_1 = np.concatenate((weights_push, np.ones(len(theta_unknown_S))))
 
-        # zip ("hide") the weights with the labels
-        Y_train_1 = np.stack((Y_train_1, w_train_1), axis=1)
-        Y_test_1 = np.stack((Y_test_1, w_test_1), axis=1)   
+        ds_1 = to_ydf_ds(X=xvals_1, feature_names=feature_names, y=yvals_1, w=weights_1)
+        learner = ydf.GradientBoostedTreesLearner(label="label", weights="weight")
+        model = learner.train(ds_1)
 
-        model.compile(loss=weighted_binary_crossentropy,
-                      optimizer='Adam',
-                      metrics=[weighted_accuracy],
-                      jit_compile=False)
-
-        callbacks = callbacks_fn(i) if callbacks_fn is not None else [[], []]
-
-        model.fit(X_train_1, Y_train_1,
-                  epochs=20,
-                  batch_size=10000,
-                  validation_data=(X_test_1, Y_test_1),
-                  callbacks=callbacks[0],
-                  verbose=verbose)
-
-        weights_pull = weights_push * reweight(theta0_S,model)
+        weights_pull = weights_push * reweight_ydf(events_dict={name: theta0_S[:, i] for i, name in enumerate(feature_names)}, 
+                                                   model=model)
         weights[i, :1, :] = weights_pull
 
         # STEP 2: classify Gen. to reweighted Gen. (which is reweighted by weights_pull)
@@ -81,25 +77,13 @@ def omnifold_ydf(theta0,
         weights_2 = np.concatenate((np.ones(len(theta0_G)), weights_pull))
         # ones for Gen. (not MC weights), actual weights for (reweighted) Gen.
 
-        X_train_2, X_test_2, Y_train_2, Y_test_2, w_train_2, w_test_2 = train_test_split(xvals_2, yvals_2, weights_2)
 
-        # zip ("hide") the weights with the labels
-        Y_train_2 = np.stack((Y_train_2, w_train_2), axis=1)
-        Y_test_2 = np.stack((Y_test_2, w_test_2), axis=1)   
+        ds_2 = to_ydf_ds(X=xvals_2, feature_names=feature_names, y=yvals_2, w=weights_2)
+        learner = ydf.GradientBoostedTreesLearner(label="label", weights="weight")
+        model = learner.train(ds_2)
 
-        model.compile(loss=weighted_binary_crossentropy,
-                      optimizer='Adam',
-                      metrics=[weighted_accuracy],
-                      jit_compile=False)
-        
-        model.fit(X_train_2, Y_train_2,
-                  epochs=20,
-                  batch_size=2000,
-                  validation_data=(X_test_2, Y_test_2),
-                  callbacks=callbacks[1],
-                  verbose=verbose)
-
-        weights_push = reweight(theta0_G,model)
+        weights_push = reweight_ydf(events_dict={name: theta0_G[:, i] for i, name in enumerate(feature_names)}, 
+                                    model=model)
         weights[i, 1:2, :] = weights_push
         pass
 
