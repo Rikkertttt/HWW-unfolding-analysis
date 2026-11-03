@@ -1,43 +1,17 @@
 # Yggdrasil Decision Forest (YDF) implementation of Omnifold.
 
 import numpy as np
-import tensorflow as tf
 import ydf
 
-K = tf.keras.backend
-from sklearn.model_selection import train_test_split
-
-def reweight(events,model,batch_size=10000):
+def reweight_ydf(events,model,batch_size=10000):
     f = model.predict(events, batch_size=batch_size)
     weights = f / (1. - f)
     return np.squeeze(np.nan_to_num(weights))
 
-# Binary crossentropy for classifying two samples with weights
-# Weights are "hidden" by zipping in y_true (the labels)
 
-def weighted_binary_crossentropy(y_true, y_pred):
-    weights = tf.gather(y_true, [1], axis=1) # event weights
-    y_true = tf.gather(y_true, [0], axis=1) # actual y_true for loss
-
-    # Clip the prediction value to prevent NaN's and Inf's
-    epsilon = K.epsilon()
-    y_pred = K.clip(y_pred, epsilon, 1. - epsilon)
-
-    t_loss = -weights * ((y_true) * K.log(y_pred) +
-                         (1 - y_true) * K.log(1 - y_pred))
-
-    return K.mean(t_loss)
-
-def weighted_accuracy(y_true, y_pred):
-    weights = tf.gather(y_true, [1], axis=1)
-    y_true  = tf.gather(y_true, [0], axis=1)
-    correct = tf.cast(tf.equal(y_true, tf.round(y_pred)), tf.float32)
-    return tf.reduce_sum(weights * correct) / tf.reduce_sum(weights)
-
-def omnifold(theta0,
+def omnifold_ydf(theta0,
              theta_unknown_S, 
-             iterations, 
-             model, 
+             iterations,  
              verbose=0, 
              callbacks_fn=None):
 
@@ -75,8 +49,6 @@ def omnifold(theta0,
             pass
 
         weights_1 = np.concatenate((weights_push, np.ones(len(theta_unknown_S))))
-
-        X_train_1, X_test_1, Y_train_1, Y_test_1, w_train_1, w_test_1 = train_test_split(xvals_1, yvals_1, weights_1)
 
         # zip ("hide") the weights with the labels
         Y_train_1 = np.stack((Y_train_1, w_train_1), axis=1)
