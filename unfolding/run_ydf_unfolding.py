@@ -2,7 +2,7 @@ import os
 os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=0"
 
 import sys
-sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis-yggdrasil")
+sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")
 
 import numpy as np
 import json
@@ -18,7 +18,7 @@ data_gen_DIR  = "/data/atlas/users/rvanrhee/eft_chwtil5p0_parquet/full_selection
 data_reco_DIR = "/data/atlas/users/rvanrhee/eft_chwtil5p0_parquet/full_selection/reco/"
 
 
-OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis-yggdrasil/unfolding/eft_chwtil5p0_ydf_test/"
+OUTDIR = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/eft_chwtil5p0_ydf_test/"
 os.makedirs(OUTDIR, exist_ok=True)
 
 
