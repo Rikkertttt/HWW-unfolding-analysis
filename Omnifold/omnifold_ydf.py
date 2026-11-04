@@ -7,13 +7,13 @@ from typing import Optional
 import matplotlib.pyplot as plt
 
 def reweight_ydf(events_dict: dict[str, np.ndarray], model: ydf.GradientBoostedTreesModel) -> np.ndarray:
-    probs = model.predict(events_dict)   # shape (N,), already P(label="1")
+    probs = model.predict(events_dict)   # shape (N,)
     weights = probs / (1. - probs)
     return np.nan_to_num(weights)
 
 def to_ydf_ds(X: np.ndarray, feature_names: list[str], y: np.ndarray, w: np.ndarray) -> dict[str, np.ndarray]:
     ds = {name: X[:, i] for i, name in enumerate(feature_names)}
-    ds["label"] = y.astype(str)   # must be string for CATEGORICAL
+    ds["label"] = y.astype(str)
     ds["weight"] = w
     return ds
 
