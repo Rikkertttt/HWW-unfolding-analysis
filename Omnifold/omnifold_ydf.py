@@ -6,40 +6,53 @@ import ydf
 from typing import Optional
 import matplotlib.pyplot as plt
 
-def reweight_ydf(events_dict, model):
+def reweight_ydf(events_dict: dict[str, np.ndarray], model: ydf.GradientBoostedTreesModel) -> np.ndarray:
     probs = model.predict(events_dict)   # shape (N,), already P(label="1")
     weights = probs / (1. - probs)
     return np.nan_to_num(weights)
 
-def to_ydf_ds(X, feature_names, y, w):
+def to_ydf_ds(X: np.ndarray, feature_names: list[str], y: np.ndarray, w: np.ndarray) -> dict[str, np.ndarray]:
     ds = {name: X[:, i] for i, name in enumerate(feature_names)}
     ds["label"] = y.astype(str)   # must be string for CATEGORICAL
     ds["weight"] = w
     return ds
 
-def _save_loss_plot(model, report_dir, i, step):
+def _save_loss_plot(model: ydf.GradientBoostedTreesModel, report_dir: str, i: int, step: int) -> None:
     logs = model.training_logs()
-    num_trees = [log.iteration for log in logs]
-    valid_loss = [log.evaluation.loss for log in logs]
-    train_loss = [log.training_evaluation.loss for log in logs]
+    iterations  = [log.iteration for log in logs]
+    valid_loss  = [log.evaluation.loss for log in logs]
+    train_loss  = [log.training_evaluation.loss if log.training_evaluation is not None else float("nan") for log in logs]
+    valid_acc   = [log.evaluation.accuracy for log in logs]
+    train_acc   = [log.training_evaluation.accuracy if log.training_evaluation is not None else float("nan") for log in logs]
 
-    fig, ax = plt.subplots()
-    ax.plot(num_trees, train_loss, label="train loss")
-    ax.plot(num_trees, valid_loss, label="valid loss")
-    ax.set_xlabel("iteration")
-    ax.set_ylabel("loss")
-    ax.set_title(f"Iteration {i + 1} — Step {step}")
-    ax.legend()
+    fig, (ax_loss, ax_acc) = plt.subplots(1, 2, figsize=(10, 4))
+
+    ax_loss.plot(iterations, train_loss, label="train")
+    ax_loss.plot(iterations, valid_loss, label="valid")
+    ax_loss.set_xlabel("iteration")
+    ax_loss.set_ylabel("loss")
+    ax_loss.set_title(f"Loss — Iter {i + 1}, Step {step}")
+    ax_loss.legend()
+
+    ax_acc.plot(iterations, train_acc, label="train")
+    ax_acc.plot(iterations, valid_acc, label="valid")
+    ax_acc.set_xlabel("iteration")
+    ax_acc.set_ylabel("accuracy")
+    ax_acc.set_title(f"Accuracy — Iter {i + 1}, Step {step}")
+    ax_acc.legend()
+
+    fig.tight_layout()
     fig.savefig(f"{report_dir}/loss_iter{i}_step{step}.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
-def omnifold_ydf(theta0,
-                 theta_unknown_S,
-                 iterations,
-                 feature_names=None,
-                 verbose=0,
-                 save_report_path: Optional[str] = None):
+def omnifold_ydf(theta0: np.ndarray,
+                 theta_unknown_S: np.ndarray,
+                 iterations: int,
+                 feature_names: Optional[list[str]] = None,
+                 verbose: int = 0,
+                 save_report_path: Optional[str] = None,
+                 num_trees: int = 300,) -> np.ndarray:
 
     weights = np.empty(shape=(iterations, 2, len(theta0)))
     # shape = (iteration, step, event)
@@ -86,7 +99,7 @@ def omnifold_ydf(theta0,
         learner = ydf.GradientBoostedTreesLearner(label="label",
                                                   weights="weight",
                                                   discretize_numerical_columns=True,
-                                                  num_trees=300)
+                                                  num_trees=num_trees)
         model = learner.train(ds_1)
 
         weights_pull = weights_push * reweight_ydf(
@@ -112,7 +125,7 @@ def omnifold_ydf(theta0,
         learner = ydf.GradientBoostedTreesLearner(label="label",
                                                   weights="weight",
                                                   discretize_numerical_columns=True,
-                                                  num_trees=300)
+                                                  num_trees=num_trees)
         model = learner.train(ds_2)
 
         weights_push = reweight_ydf(
