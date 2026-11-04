@@ -48,12 +48,13 @@ ITERATIONS = 2
 
 # Run Omnifold with YDF
 weights = omnifold_ydf(
-    theta0,
-    theta_unknown_S,
+    theta0=theta0,
+    theta_unknown_S=theta_unknown_S,
     iterations=ITERATIONS,
     feature_names=features,
     verbose=True,
     save_report_path=OUTDIR,
+    num_trees=300,
 )
 
 
