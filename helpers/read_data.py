@@ -70,6 +70,40 @@ class EventObjects:
     def __len__(self) -> int:
         return len(self.event_id)
 
+    def rotate(self, angle: float):
+        """Rotate all events in phi by angle (radians). Result is wrapped to [-π, π]."""
+
+        def shift_phi(arr: ak.Array) -> ak.Array:
+            new_phi = arr.phi + angle
+            new_phi = (new_phi + np.pi) % (2 * np.pi) - np.pi
+            return ak.with_field(arr, new_phi, "phi")
+
+        return EventObjects(
+            event_id  = self.event_id,
+            jets      = shift_phi(self.jets),
+            muons     = shift_phi(self.muons),
+            electrons = shift_phi(self.electrons),
+            met       = shift_phi(self.met),
+            file_id   = self.file_id,
+        )
+
+    def invert(self):
+        """Invert all events in eta."""
+        
+        def invert_eta(arr: ak.Array) -> ak.Array:
+            return ak.with_field(arr, -arr.eta, "eta")
+
+        return EventObjects(
+            event_id  = self.event_id,
+            jets      = invert_eta(self.jets),
+            muons     = invert_eta(self.muons),
+            electrons = invert_eta(self.electrons),
+            met       = invert_eta(self.met),
+            file_id   = self.file_id,
+        )
+
+
+
 
 def open_root_file(path: str, show_keys: bool = False, verbose: bool = False):
     """Open a ROOT file with uproot, optionally printing its top-level keys."""
