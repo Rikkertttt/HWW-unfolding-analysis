@@ -48,13 +48,17 @@ class EventObjects:
         # other always gets the next available file_id
         other_file_id = np.full(len(other.event_id), next_id, dtype=int)
 
+        def cat(a, b):
+            c = ak.concatenate([a, b])
+            return ak.zip({f: c[f] for f in c.fields}) if c.fields else c
+
         return EventObjects(
-            event_id    = np.concatenate([self.event_id,  other.event_id]),
-            jets        = ak.concatenate([self.jets,       other.jets]),
-            muons       = ak.concatenate([self.muons,      other.muons]),
-            electrons   = ak.concatenate([self.electrons,  other.electrons]),
-            met         = ak.concatenate([self.met,        other.met]),
-            file_id     = np.concatenate([self_file_id,    other_file_id]),
+            event_id  = np.concatenate([self.event_id,  other.event_id]),
+            jets      = cat(self.jets,      other.jets),
+            muons     = cat(self.muons,     other.muons),
+            electrons = cat(self.electrons, other.electrons),
+            met       = cat(self.met,       other.met),
+            file_id   = np.concatenate([self_file_id, other_file_id]),
         )
 
     def __getitem__(self, index):
