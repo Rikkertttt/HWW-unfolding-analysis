@@ -50,7 +50,9 @@ class EventObjects:
 
         def cat(a, b):
             c = ak.concatenate([a, b])
-            return ak.zip({f: c[f] for f in c.fields}) if c.fields else c
+            if c.fields and isinstance(c.layout, ak.contents.UnionArray):
+                c = ak.zip({f: c[f] for f in c.fields}, with_name="Momentum4D")
+            return c
 
         return EventObjects(
             event_id  = np.concatenate([self.event_id,  other.event_id]),
@@ -90,6 +92,11 @@ class EventObjects:
             met       = shift_phi(self.met),
             file_id   = self.file_id,
         )
+
+    def rotate_to_j1(self):
+        """Rotate all events so that the leading jet is at phi=0."""
+        j1_phi = self.jets[:, 0].phi
+        return self.rotate(-j1_phi)
 
     def invert(self):
         """Invert all events in eta."""
