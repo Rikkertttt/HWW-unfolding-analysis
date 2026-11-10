@@ -94,9 +94,24 @@ class EventObjects:
         )
 
     def rotate_to_j1(self):
-        """Rotate all events so that the leading jet is at phi=0."""
-        j1_phi = self.jets[:, 0].phi
-        return self.rotate(-j1_phi)
+        """Rotate each event in phi so that the leading jet sits at phi=0."""
+        j1_phi = self.jets[:, 0].phi  # shape (N,)
+
+        def shift_phi(arr: ak.Array) -> ak.Array:
+            # ak.broadcast_arrays ensures the scalar-per-event angle
+            # broadcasts correctly against jagged per-event arrays
+            angle, shifted = ak.broadcast_arrays(-j1_phi, arr.phi)
+            new_phi = (shifted + angle + np.pi) % (2 * np.pi) - np.pi
+            return ak.with_field(arr, new_phi, "phi")
+
+        return EventObjects(
+            event_id  = self.event_id,
+            jets      = shift_phi(self.jets),
+            muons     = shift_phi(self.muons),
+            electrons = shift_phi(self.electrons),
+            met       = shift_phi(self.met),
+            file_id   = self.file_id,
+        )
 
     def invert(self):
         """Invert all events in eta."""
@@ -319,15 +334,17 @@ def load_gen_objects(tree, verbose: bool = False, MET_is_neutrino: bool = False)
             arrays["Particle.Phi"][neutrino_mask],
             ak.zeros_like(arrays["Particle.PT"][neutrino_mask]),
         )
-        gen_met = ak.zip(
-            {
-                "px":     ak.sum(nu.px, axis=1),
-                "py":     ak.sum(nu.py, axis=1),
-                "pz":     ak.zeros_like(ak.sum(nu.px, axis=1)),
-                "energy": np.sqrt(ak.sum(nu.px, axis=1)**2 + ak.sum(nu.py, axis=1)**2),
-            },
-            with_name="Momentum4D",
+
+        nu_px = ak.sum(nu.px, axis=1)
+        nu_py = ak.sum(nu.py, axis=1)
+
+        gen_met = make_four_momentum(
+            pt   = np.sqrt(nu_px**2 + nu_py**2),
+            eta  = ak.zeros_like(nu_px),
+            phi  = np.arctan2(nu_py, nu_px),
+            mass = ak.zeros_like(nu_px),
         )
+
         if verbose: print("Made MET 4-momentum from neutrinos in Particle branch")
 
     return EventObjects(
