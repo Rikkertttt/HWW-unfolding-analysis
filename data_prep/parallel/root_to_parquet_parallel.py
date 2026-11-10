@@ -14,6 +14,8 @@ from collections import defaultdict
 parser = argparse.ArgumentParser()
 parser.add_argument("--file",    required=True, help="Full path to ROOT file")
 parser.add_argument("--savedir", required=True, help="Base save directory for parquet output")
+parser.add_argument("--met-is-neutrino", action="store_true", default=False,
+                    help="Use neutrino sum as gen MET instead of GenMissingET branch")
 args = parser.parse_args()
 
 total_reco_counts = defaultdict(int)
@@ -40,7 +42,7 @@ PATH = file + ":Delphes"
 tree = rd.open_root_file(PATH, show_keys=False, verbose=False)
 
 reco_event = rd.load_reco_objects(tree, verbose=False)
-gen_event  = rd.load_gen_objects(tree, verbose=False, MET_is_neutrino=True)
+gen_event  = rd.load_gen_objects(tree, verbose=False, MET_is_neutrino=args.met_is_neutrino)
 
 # Save raw data
 rd.save_events(reco_event, f"{save_DIR_raw}reco/reco_{stem}_raw.parquet")
