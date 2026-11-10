@@ -9,7 +9,7 @@ from Omnifold.features import build_feature_rows
 from helpers.read_data import load_events
 
 # Path where weights and matched parquet files are saved
-PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/eft_chwtil5p0"
+PATH = "/user/rvanrhee/projects_rik/HWW-unfolding-analysis/unfolding/hww_closure_ydf_rotated_set_to_j1/"
 
 # Load pre-matched events (no reload/rematch needed)
 prior_gen_events       = load_events(os.path.join(PATH, "prior_gen_matched.parquet"))
@@ -43,7 +43,7 @@ plot_weight_distributions(
     final_reco_weights=final_reco_weights,
     final_truth_weights=final_truth_weights,
     outdir=PATH,
-    filename="omnifold_weights_eft_chwtil5p0",
+    filename="omnifold_weights_hww_closure_ydf_rotated",
     bins=150,
 )
 
@@ -52,18 +52,18 @@ print("Plotted weights")
 plot_omnifold_overview(
     feature_rows=rows,
     outdir=PATH,
-    filename="omnifold_overview_eft_chwtil5p0",
-    title="OmniFold overview — eft_chwtil5p0",
-    prior_data_name=["HWW prior", "HWW eft data"],
+    filename="omnifold_overview_hww_closure_ydf_rotated",
+    title="OmniFold overview — hww_closure_ydf_rotated",
+    prior_data_name=["HWW prior", "HWW data"],
 )
 
 for row in rows:
     plot_omnifold_overview(
         feature_rows=[row],
         outdir=overview_dir,
-        filename=f"omnifold_overview_{row['feature']}_eft_chwtil5p0",
-        title=f"OmniFold overview — {row['feature']} (eft_chwtil5p0)",
-        prior_data_name=["HWW prior", "HWW eft data"],
+        filename=f"omnifold_overview_{row['feature']}_hww_closure_ydf_rotated",
+        title=f"OmniFold overview — {row['feature']} (hww_closure_ydf_rotated)",
+        prior_data_name=["HWW prior", "HWW data"],
     )
 
 print("Plotted overview")
@@ -71,18 +71,18 @@ print("Plotted overview")
 plot_closure_summary(
     feature_rows=rows,
     outdir=PATH,
-    filename="omnifold_closure_eft_chwtil5p0",
-    title="OmniFold closure summary — eft_chwtil5p0",
-    data_name="HWW eft data",
+    filename="omnifold_closure_hww_closure_ydf_rotated",
+    title="OmniFold closure summary — hww_closure_ydf_rotated",
+    data_name="HWW data",
 )
 
 for row in rows:
     plot_closure_summary(
         feature_rows=[row],
         outdir=closure_dir,
-        filename=f"omnifold_closure_{row['feature']}_eft_chwtil5p0",
-        title=f"OmniFold closure summary — {row['feature']} (eft_chwtil5p0)",
-        data_name="HWW eft data",
+        filename=f"omnifold_closure_{row['feature']}_hww_closure_ydf_rotated",
+        title=f"OmniFold closure summary — {row['feature']} (hww_closure_ydf_rotated)",
+        data_name="HWW data",
     )
 
 print("Plotted summary")
