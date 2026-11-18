@@ -76,29 +76,55 @@ def make_cfg(features: List[str]) -> List[Callable]:
     intended to be passed to ``make_features``.
 
     Supported feature names:
-    ``j1_pt``, ``j1_eta``, ``j1_phi``,
-    ``j2_pt``, ``j2_eta``, ``j2_phi``,
-    ``electron_pt``, ``electron_eta``, ``electron_phi``,
-    ``muon_pt``, ``muon_eta``, ``muon_phi``,
-    ``met_pt``, ``higgs_mass``.
+
+    Individual kinematics:
+        ``j1_pt``, ``j1_eta``, ``j1_phi``,
+        ``j2_pt``, ``j2_eta``, ``j2_phi``,
+        ``electron_pt``, ``electron_eta``, ``electron_phi``,
+        ``muon_pt``, ``muon_eta``, ``muon_phi``,
+        ``met_pt``, ``higgs_mass``
+
+    Dijet system:
+        ``m_jj``, ``jj_delta_eta``, ``jj_delta_phi``, ``jj_delta_R``
+
+    Dilepton system:
+        ``ll_mass``, ``ll_pt``, ``ll_delta_eta``, ``ll_delta_phi``, ``ll_delta_R``
+
+    Jet-lepton system:
+        ``j1_lep_delta_eta``, ``j2_lep_delta_eta``,
+        ``j1_lep_delta_R``, ``j2_lep_delta_R``
 
     Unknown names are skipped with a warning.
     """
     _map = {
-        "j1_pt":        lambda e: e.jets[:, 0].pt,
-        "j1_eta":       lambda e: e.jets[:, 0].eta,
-        "j1_phi":       lambda e: e.jets[:, 0].phi,
-        "j2_pt":        lambda e: e.jets[:, 1].pt,
-        "j2_eta":       lambda e: e.jets[:, 1].eta,
-        "j2_phi":       lambda e: e.jets[:, 1].phi,
-        "muon_pt":      lambda e: e.muons[:, 0].pt,
-        "muon_eta":     lambda e: e.muons[:, 0].eta,
-        "muon_phi":     lambda e: e.muons[:, 0].phi,
-        "electron_pt":  lambda e: e.electrons[:, 0].pt,
-        "electron_eta": lambda e: e.electrons[:, 0].eta,
-        "electron_phi": lambda e: e.electrons[:, 0].phi,
-        "met_pt":       lambda e: e.met.pt,
-        "higgs_mass":   lambda e: higgs_mass(e),
+        "j1_pt":            lambda e: e.jets[:, 0].pt,
+        "j1_eta":           lambda e: e.jets[:, 0].eta,
+        "j1_phi":           lambda e: e.jets[:, 0].phi,
+        "j2_pt":            lambda e: e.jets[:, 1].pt,
+        "j2_eta":           lambda e: e.jets[:, 1].eta,
+        "j2_phi":           lambda e: e.jets[:, 1].phi,
+        "muon_pt":          lambda e: e.muons[:, 0].pt,
+        "muon_eta":         lambda e: e.muons[:, 0].eta,
+        "muon_phi":         lambda e: e.muons[:, 0].phi,
+        "electron_pt":      lambda e: e.electrons[:, 0].pt,
+        "electron_eta":     lambda e: e.electrons[:, 0].eta,
+        "electron_phi":     lambda e: e.electrons[:, 0].phi,
+        "met_pt":           lambda e: e.met.pt,
+        "higgs_mass":       lambda e: higgs_mass(e),
+        "m_jj":             lambda e: (e.jets[:, 0] + e.jets[:, 1]).mass,
+        "jj_delta_eta":     lambda e: np.abs(e.jets[:, 0].deltaeta(e.jets[:, 1])),
+        "jj_delta_phi":     lambda e: np.abs(e.jets[:, 0].deltaphi(e.jets[:, 1])),
+        "jj_delta_R":       lambda e: e.jets[:, 0].deltaR(e.jets[:, 1]),
+        "ll_delta_eta":     lambda e: np.abs(e.electrons[:, 0].deltaeta(e.muons[:, 0])),
+        "ll_delta_phi":     lambda e: np.abs(e.electrons[:, 0].deltaphi(e.muons[:, 0])),
+        "ll_delta_R":       lambda e: e.electrons[:, 0].deltaR(e.muons[:, 0]),
+        "ll_mass":          lambda e: (e.electrons[:, 0] + e.muons[:, 0]).mass,
+        "ll_pt":            lambda e: (e.electrons[:, 0] + e.muons[:, 0]).pt,
+        "j1_lep_delta_eta": lambda e: np.abs(e.jets[:, 0].deltaeta(e.electrons[:, 0] + e.muons[:, 0])),
+        "j2_lep_delta_eta": lambda e: np.abs(e.jets[:, 1].deltaeta(e.electrons[:, 0] + e.muons[:, 0])),
+        "j1_lep_delta_R":   lambda e: e.jets[:, 0].deltaR(e.electrons[:, 0] + e.muons[:, 0]),
+        "j2_lep_delta_R":   lambda e: e.jets[:, 1].deltaR(e.electrons[:, 0] + e.muons[:, 0]),
+
     }
 
     cfg = []
@@ -188,20 +214,69 @@ def make_theta_and_scale(
 # Used by build_feature_rows() to avoid repeating bin/label definitions at
 # every call site.
 FEATURE_META = {
-    "j1_pt":       (lambda e: ak.to_numpy(e.jets[:, 0].pt),        np.linspace(0,      500, 81), r"Leading-jet $p_T$ [GeV]"),
-    "j1_eta":      (lambda e: ak.to_numpy(e.jets[:, 0].eta),       np.linspace(-4.5,   4.5, 81), r"Leading-jet $\eta$"),
-    "j1_phi":      (lambda e: ak.to_numpy(e.jets[:, 0].phi),       np.linspace(-np.pi, np.pi, 81), r"Leading-jet $\phi$"),
-    "j2_pt":       (lambda e: ak.to_numpy(e.jets[:, 1].pt),        np.linspace(0,      300, 81), r"Subleading-jet $p_T$ [GeV]"),
-    "j2_eta":      (lambda e: ak.to_numpy(e.jets[:, 1].eta),       np.linspace(-4.5,   4.5, 81), r"Subleading-jet $\eta$"),
-    "j2_phi":      (lambda e: ak.to_numpy(e.jets[:, 1].phi),       np.linspace(-np.pi, np.pi, 81), r"Subleading-jet $\phi$"),
-    "electron_pt": (lambda e: ak.to_numpy(e.electrons[:, 0].pt),   np.linspace(0,      300, 81), r"Electron $p_T$ [GeV]"),
-    "electron_eta":(lambda e: ak.to_numpy(e.electrons[:, 0].eta),  np.linspace(-4.5,   4.5, 81), r"Electron $\eta$"),
-    "electron_phi":(lambda e: ak.to_numpy(e.electrons[:, 0].phi),  np.linspace(-np.pi, np.pi, 81), r"Electron $\phi$"),
-    "muon_pt":     (lambda e: ak.to_numpy(e.muons[:, 0].pt),       np.linspace(0,      300, 81), r"Muon $p_T$ [GeV]"),
-    "muon_eta":    (lambda e: ak.to_numpy(e.muons[:, 0].eta),      np.linspace(-4.5,   4.5, 81), r"Muon $\eta$"),
-    "muon_phi":    (lambda e: ak.to_numpy(e.muons[:, 0].phi),      np.linspace(-np.pi, np.pi, 81), r"Muon $\phi$"),
-    "higgs_mass":  (lambda e: ak.to_numpy(higgs_mass(e)),          np.linspace(0,      200, 81), r"Higgs mass $m_H$ [GeV]"),
+    # --- Individual kinematics ---
+    "j1_pt":            (lambda e: ak.to_numpy(e.jets[:, 0].pt),
+                         np.linspace(0, 500, 81),       r"Leading-jet $p_T$ [GeV]"),
+    "j1_eta":           (lambda e: ak.to_numpy(e.jets[:, 0].eta),
+                         np.linspace(-4.5, 4.5, 81),    r"Leading-jet $\eta$"),
+    "j1_phi":           (lambda e: ak.to_numpy(e.jets[:, 0].phi),
+                         np.linspace(-np.pi, np.pi, 81), r"Leading-jet $\phi$"),
+    "j2_pt":            (lambda e: ak.to_numpy(e.jets[:, 1].pt),
+                         np.linspace(0, 300, 81),        r"Subleading-jet $p_T$ [GeV]"),
+    "j2_eta":           (lambda e: ak.to_numpy(e.jets[:, 1].eta),
+                         np.linspace(-4.5, 4.5, 81),    r"Subleading-jet $\eta$"),
+    "j2_phi":           (lambda e: ak.to_numpy(e.jets[:, 1].phi),
+                         np.linspace(-np.pi, np.pi, 81), r"Subleading-jet $\phi$"),
+    "electron_pt":      (lambda e: ak.to_numpy(e.electrons[:, 0].pt),
+                         np.linspace(0, 300, 81),        r"Electron $p_T$ [GeV]"),
+    "electron_eta":     (lambda e: ak.to_numpy(e.electrons[:, 0].eta),
+                         np.linspace(-4.5, 4.5, 81),    r"Electron $\eta$"),
+    "electron_phi":     (lambda e: ak.to_numpy(e.electrons[:, 0].phi),
+                         np.linspace(-np.pi, np.pi, 81), r"Electron $\phi$"),
+    "muon_pt":          (lambda e: ak.to_numpy(e.muons[:, 0].pt),
+                         np.linspace(0, 300, 81),        r"Muon $p_T$ [GeV]"),
+    "muon_eta":         (lambda e: ak.to_numpy(e.muons[:, 0].eta),
+                         np.linspace(-4.5, 4.5, 81),    r"Muon $\eta$"),
+    "muon_phi":         (lambda e: ak.to_numpy(e.muons[:, 0].phi),
+                         np.linspace(-np.pi, np.pi, 81), r"Muon $\phi$"),
+    "met_pt":           (lambda e: ak.to_numpy(e.met.pt),
+                         np.linspace(0, 300, 81),        r"MET $p_T$ [GeV]"),
+    "higgs_mass":       (lambda e: ak.to_numpy(higgs_mass(e)),
+                         np.linspace(0, 200, 81),        r"Higgs mass $m_H$ [GeV]"),
+
+    # --- Dijet system ---
+    "m_jj":             (lambda e: ak.to_numpy((e.jets[:, 0] + e.jets[:, 1]).mass),
+                         np.linspace(0, 1000, 81),       r"Dijet mass $m_{jj}$ [GeV]"),
+    "jj_delta_eta":     (lambda e: ak.to_numpy(np.abs(e.jets[:, 0].deltaeta(e.jets[:, 1]))),
+                         np.linspace(0, 10, 81),         r"Dijet $|\Delta\eta|$"),
+    "jj_delta_phi":     (lambda e: ak.to_numpy(np.abs(e.jets[:, 0].deltaphi(e.jets[:, 1]))),
+                         np.linspace(0, np.pi, 81),      r"Dijet $|\Delta\phi|$"),
+    "jj_delta_R":       (lambda e: ak.to_numpy(e.jets[:, 0].deltaR(e.jets[:, 1])),
+                         np.linspace(0, 10, 81),         r"Dijet $\Delta R$"),
+
+    # --- Dilepton system ---
+    "ll_mass":          (lambda e: ak.to_numpy((e.electrons[:, 0] + e.muons[:, 0]).mass),
+                         np.linspace(0, 200, 81),        r"Dilepton mass $m_{\ell\ell}$ [GeV]"),
+    "ll_pt":            (lambda e: ak.to_numpy((e.electrons[:, 0] + e.muons[:, 0]).pt),
+                         np.linspace(0, 300, 81),        r"Dilepton $p_T$ [GeV]"),
+    "ll_delta_eta":     (lambda e: ak.to_numpy(np.abs(e.electrons[:, 0].deltaeta(e.muons[:, 0]))),
+                         np.linspace(0, 5, 81),          r"Dilepton $|\Delta\eta|$"),
+    "ll_delta_phi":     (lambda e: ak.to_numpy(np.abs(e.electrons[:, 0].deltaphi(e.muons[:, 0]))),
+                         np.linspace(0, np.pi, 81),      r"Dilepton $|\Delta\phi|$"),
+    "ll_delta_R":       (lambda e: ak.to_numpy(e.electrons[:, 0].deltaR(e.muons[:, 0])),
+                         np.linspace(0, 6, 81),          r"Dilepton $\Delta R$"),
+
+    # --- Jet-lepton system ---
+    "j1_lep_delta_eta": (lambda e: ak.to_numpy(np.abs(e.jets[:, 0].deltaeta(e.electrons[:, 0] + e.muons[:, 0]))),
+                         np.linspace(0, 6, 81),          r"$|\Delta\eta(j_1, \ell\ell)|$"),
+    "j2_lep_delta_eta": (lambda e: ak.to_numpy(np.abs(e.jets[:, 1].deltaeta(e.electrons[:, 0] + e.muons[:, 0]))),
+                         np.linspace(0, 6, 81),          r"$|\Delta\eta(j_2, \ell\ell)|$"),
+    "j1_lep_delta_R":   (lambda e: ak.to_numpy(e.jets[:, 0].deltaR(e.electrons[:, 0] + e.muons[:, 0])),
+                         np.linspace(0, 8, 81),          r"$\Delta R(j_1, \ell\ell)$"),
+    "j2_lep_delta_R":   (lambda e: ak.to_numpy(e.jets[:, 1].deltaR(e.electrons[:, 0] + e.muons[:, 0])),
+                         np.linspace(0, 8, 81),          r"$\Delta R(j_2, \ell\ell)$"),
 }
+
 
 
 def build_feature_rows(
