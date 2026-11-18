@@ -52,7 +52,8 @@ def omnifold_ydf(theta0: np.ndarray,
                  feature_names: Optional[list[str]] = None,
                  verbose: int = 0,
                  save_report_path: Optional[str] = None,
-                 num_trees: int = 300,) -> np.ndarray:
+                 num_trees: int = 300,
+                 max_depth: int = 6) -> np.ndarray:
 
     weights = np.empty(shape=(iterations, 2, len(theta0)))
     # shape = (iteration, step, event)
@@ -99,7 +100,8 @@ def omnifold_ydf(theta0: np.ndarray,
         learner = ydf.GradientBoostedTreesLearner(label="label",
                                                   weights="weight",
                                                   discretize_numerical_columns=True,
-                                                  num_trees=num_trees)
+                                                  num_trees=num_trees,
+                                                  max_depth=max_depth)
         model = learner.train(ds_1)
 
         weights_pull = weights_push * reweight_ydf(
