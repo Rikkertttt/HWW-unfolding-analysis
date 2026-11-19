@@ -10,6 +10,7 @@ def open_saved_weights(
     weight_name:     str = "weights",
     json_name:       str = "features",
     clip_percentile: Optional[float] = None,
+    weight_idx:      int = -1,
 ) -> Tuple[np.ndarray, np.ndarray, Optional[List[str]]]:
     """Load OmniFold weights and feature names from PATH.
     
@@ -19,8 +20,8 @@ def open_saved_weights(
 
     weights = np.load(os.path.join(PATH, weight_name + ".npy"))
 
-    w_reco  = weights[-1, 0, :]
-    w_truth = weights[-1, 1, :]
+    w_reco  = weights[weight_idx, 0, :]
+    w_truth = weights[weight_idx, 1, :]
 
     if clip_percentile is not None:
         final_reco_weights  = np.clip(w_reco,  0, np.percentile(w_reco,  clip_percentile))
