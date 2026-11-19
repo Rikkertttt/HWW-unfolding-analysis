@@ -1,4 +1,4 @@
-executable = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/run_root_to_parquet.sh
+executable = /user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep/sequential/run_root_to_parquet_seq.sh
 
 request_cpus   = 4
 request_memory = 32G

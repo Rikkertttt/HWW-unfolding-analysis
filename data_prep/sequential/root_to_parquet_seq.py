@@ -4,6 +4,7 @@
 import os
 import sys
 sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis")
+sys.path.append("/user/rvanrhee/projects_rik/HWW-unfolding-analysis/data_prep")
 
 import time
 import helpers.read_data as rd
