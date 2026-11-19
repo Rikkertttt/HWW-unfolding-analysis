@@ -78,32 +78,30 @@ Cuts are implemented in `event_selection_filters.py` and follow the VBF $H\right
 
 ### Preselection (`full_preselection`)
 
-| Step | Cut | Count label |
-|---|---|---|
-| Initial | Initial event count | `Start` |
-| Jet cleaning | $p_\text{T} > 20\text{ GeV}$, $|\eta| < 4.5$ | *(cleans jet collection; no event cut)* |
-| Lepton multiplicity | $\ge 1\ \mu$ | `1_muon` |
-| Lepton multiplicity | $\ge 1\text{ e}$ | `1_electron` |
-| Opposite charge | Leading $\mu$ and $\text{e}$ must have opposite charge | `opp_charge` |
-| Lepton $p_\text{T}$ | Leading lepton $\ge 22\text{ GeV}$, subleading $\ge 15\text{ GeV}$ | `lepton_pt` |
-| Lepton $\eta$ | $|\eta| < 2.5$ for both leading leptons | `lepton_eta` |
-| Lepton $\Delta R$ | Leading $\mu\text{--e}$ separation $\Delta R > 0.1$ | `lepton_dR` |
-| Lepton pair mass | $m(\text{e}\mu) > 10\text{ GeV}$ | `lepton_mass` |
-| Jet–lepton overlap | Remove jets within $\Delta R < 0.4$ of either leading lepton | `lep_jet_dR_temp` *(cleans jets; event count unchanged)* |
-| Jet multiplicity | $\ge 2$ remaining jets | `2_jets` |
-| b-tag veto | Reject events with a b-tagged jet ($p_\text{T} > 20\text{ GeV}$, $|\eta| < 2.5$) | `btag` |
+| Step | Cut |
+|---|---|
+| Jet cleaning | pT > 20 GeV, \|η\| < 4.5 |
+| Lepton multiplicity | ≥ 1 μ and ≥ 1 e |
+| Opposite charge | leading μ and e must have opposite charge |
+| Lepton pT | leading lepton ≥ 22 GeV, subleading ≥ 15 GeV |
+| Lepton η | \|η\| < 2.5 for both |
+| Lepton ΔR | leading μ–e separation ΔR > 0.1 |
+| Lepton pair mass | m(eμ) > 10 GeV |
+| Jet–lepton overlap | remove jets within ΔR < 0.4 of either leading lepton |
+| Jet multiplicity | ≥ 2 remaining jets |
+| b-tag veto | reject events with a b-tagged jet with pT > 20 GeV, \|η\| < 2.5 |
 
 ### Full selection (`full_selection`)
 
 Applied on top of preselection:
 
-| Step | Cut | Count label |
-|---|---|---|
-| Central jet veto (CJV) | No additional jet with $p_\text{T} > 20\text{ GeV}$ between the two leading jets in rapidity | `CJV` |
-| Outside lepton veto (OLV) | Both selected leptons must lie within the rapidity interval of the two leading jets | `OLV` |
-| Dijet mass | $m(j_1, j_2) > 450\text{ GeV}$ | `jets_mass` |
-| Dijet rapidity gap | $|\Delta y(j_1, j_2)| \ge 2.1$ | `jet_rapidity` |
-| Lepton $\Delta\phi$ | $\Delta\phi(\text{e}, \mu) \le 1.4\text{ rad}$ | `lepton_phi` |
+| Step | Cut |
+|---|---|
+| Central jet veto (CJV) | no additional jet with pT > 20 GeV between the two leading jets in rapidity |
+| Outside lepton veto (OLV) | both selected leptons must lie within the rapidity interval of the two leading jets |
+| Dijet mass | m(j1, j2) > 450 GeV |
+| Dijet rapidity gap | \|Δy(j1, j2)\| ≥ 2.1 |
+| Lepton Δφ | Δφ(e, μ) ≤ 1.4 rad |
 
 ---
 
