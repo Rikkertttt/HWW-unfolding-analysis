@@ -35,18 +35,23 @@ class EventObjects:
 
     def __add__(self, other: "EventObjects") -> "EventObjects":
         """Concatenate two EventObjects with unique file_id values.
-        Self gets 0 (or keeps existing), other gets max(file_id) + 1.
+        Self keeps its existing file_id (or 0 if single file),
+        other is offset so its file_id values start at max(self.file_id) + 1.
         """
         # Determine file_id for self
         if self.file_id is None:
             self_file_id = np.zeros(len(self.event_id), dtype=int)
-            next_id = 1
+            next_id = 1 if len(self.event_id) > 0 else 0
         else:
             self_file_id = self.file_id
-            next_id = int(self.file_id.max()) + 1
+            next_id = int(self.file_id.max()) + 1 if len(self.file_id) > 0 else 0
 
-        # other always gets the next available file_id
-        other_file_id = np.full(len(other.event_id), next_id, dtype=int)
+        # Determine file_id for other
+        if other.file_id is None:
+            other_file_id = np.full(len(other.event_id), next_id, dtype=int)
+        else:
+            min_id = int(other.file_id.min()) if len(other.file_id) > 0 else 0
+            other_file_id = other.file_id - min_id + next_id
 
         def cat(a, b):
             c = ak.concatenate([a, b])
