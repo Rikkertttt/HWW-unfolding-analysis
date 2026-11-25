@@ -127,7 +127,8 @@ def omnifold_ydf(theta0: np.ndarray,
         learner = ydf.GradientBoostedTreesLearner(label="label",
                                                   weights="weight",
                                                   discretize_numerical_columns=True,
-                                                  num_trees=num_trees)
+                                                  num_trees=num_trees,
+                                                  max_depth=max_depth)
         model = learner.train(ds_2)
 
         weights_push = reweight_ydf(
