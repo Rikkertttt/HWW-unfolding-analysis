@@ -24,8 +24,6 @@ data_prep/
     └── aggregate_counts.py           # Post-processing: sum per-file cut counts into totals
 ```
 
-> [!IMPORTANT]
-> The `logs/` directory is ignored by git (`.gitignore`). Ensure `data_prep/logs/` exists (`mkdir -p data_prep/logs`) before submitting HTCondor jobs, otherwise jobs will fail to write logs.
 
 ---
 
