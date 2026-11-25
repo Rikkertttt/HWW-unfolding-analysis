@@ -111,6 +111,7 @@ def make_cfg(features: List[str]) -> List[Callable]:
         "electron_phi":     lambda e: e.electrons[:, 0].phi,
         "met_pt":           lambda e: e.met.pt,
         "higgs_mass":       lambda e: higgs_mass(e),
+        "higgs_mass_not0":  lambda e: higgs_mass(e, m_is0=False),
         "m_jj":             lambda e: (e.jets[:, 0] + e.jets[:, 1]).mass,
         "jj_delta_eta":     lambda e: np.abs(e.jets[:, 0].deltaeta(e.jets[:, 1])),
         "jj_delta_phi":     lambda e: np.abs(e.jets[:, 0].deltaphi(e.jets[:, 1])),
@@ -242,6 +243,8 @@ FEATURE_META = {
     "met_pt":           (lambda e: ak.to_numpy(e.met.pt),
                          np.linspace(0, 300, 81),        r"MET $p_T$ [GeV]"),
     "higgs_mass":       (lambda e: ak.to_numpy(higgs_mass(e)),
+                         np.linspace(0, 200, 81),        r"Higgs mass $m_H$ [GeV]"),
+    "higgs_mass_not0":  (lambda e: ak.to_numpy(higgs_mass(e, m_is0=False)),
                          np.linspace(0, 200, 81),        r"Higgs mass $m_H$ [GeV]"),
 
     # --- Dijet system ---
