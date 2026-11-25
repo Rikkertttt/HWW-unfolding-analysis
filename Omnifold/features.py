@@ -243,9 +243,9 @@ FEATURE_META = {
     "met_pt":           (lambda e: ak.to_numpy(e.met.pt),
                          np.linspace(0, 300, 81),        r"MET $p_T$ [GeV]"),
     "higgs_mass":       (lambda e: ak.to_numpy(higgs_mass(e)),
-                         np.linspace(0, 200, 81),        r"Higgs mass $m_H$ [GeV]"),
+                         np.linspace(0, 200, 81),        r"Higgs mass $m_H$ [GeV] ($m_{MET}=0$)"),
     "higgs_mass_not0":  (lambda e: ak.to_numpy(higgs_mass(e, m_is0=False)),
-                         np.linspace(0, 200, 81),        r"Higgs mass $m_H$ [GeV]"),
+                         np.linspace(0, 200, 81),        r"Higgs mass $m_H$ [GeV] ($m_{MET}=m_{\ell\ell}$)"),
 
     # --- Dijet system ---
     "m_jj":             (lambda e: ak.to_numpy((e.jets[:, 0] + e.jets[:, 1]).mass),
